@@ -1,0 +1,185 @@
+# CyPhOS Makefile #
+
+OBJDIR := ./build
+DEPDIR := ./deps
+
+LD_SCRIPT=ldscript-exynos4412
+OSC_LD_SCRIPT=OSC.ld
+BASE_ADDRESS=0x40008000
+
+# bootable image
+SYSTEM_IMAGE := boot
+
+ASPECTC_REPO := aspect.repo
+
+# cross-compiler prefix
+CROSS_COMPILE := arm-none-eabi-
+
+
+# cross-compiler binutils
+ASM = $(CROSS_COMPILE)gcc
+CC := $(CROSS_COMPILE)gcc
+ACXX := ag++
+CXX := $(CROSS_COMPILE)g++
+LD := $(CROSS_COMPILE)ld
+OBJCOPY := $(CROSS_COMPILE)objcopy
+
+# compiler/linker flags
+LDFLAGS := -marmelf
+LDLIBS := -L $(shell dirname $(shell $(CXX) --print-file-name=libgcc.a)) -lgcc
+ASMFLAGS := -I. -march=armv7-a -mcpu=cortex-a9 -D__ASSEMBLY__
+#-mlong-calls
+#-Wextra -pedantic 
+#CFLAGS := -Wall -I. -march=armv7-a -mcpu=cortex-a9 -g $(CFLAGS_ADD) -mhard-float -mfpu=fpa -nostdlib -mlong-calls -ffreestanding -fno-builtin
+# FIXME -Wpedantic disabled for now because of aspectc++ bug
+CFLAGS := -O3 -Wall -Werror -I. -march=armv7-a -mcpu=cortex-a9  $(CFLAGS_ADD) -mfloat-abi=softfp -nostdlib -mlong-calls -ffreestanding -fno-builtin -fpic -include arch/exynos4412/exynos4412.h  -include common/config.h
+CXXFLAGS := $(CFLAGS) -fno-stack-protector -Wno-non-virtual-dtor -fno-rtti -fno-unwind-tables -fno-exceptions -fnon-call-exceptions -fno-use-cxa-atexit -Wno-write-strings $(CXXFLAGS_ADD) -fno-omit-frame-pointer -std=c++11
+ACCFLAGS := --keep_woven --c_compiler $(CXX) -p . -r $(ASPECTC_REPO) $(CXXFLAGS)
+
+
+# Source file listings
+
+# Lowlevel bootup code
+BOOT_DIR="./boot"
+BOOT_SOURCES_C =
+BOOT_SOURCES_CC = initOS.cc cortexa9_generics.cc
+BOOT_SOURCES_ASM = startup.S startup_secondary.S
+BOOT_OBJECT = $(patsubst %.o,$(OBJDIR)/%.o,$(notdir $(BOOT_SOURCES_C:%.c=%.o))) $(patsubst %.o,$(OBJDIR)/%.o,$(notdir $(BOOT_SOURCES_CC:%.cc=%.o)))  $(patsubst %.S,$(OBJDIR)/_%.o,$(notdir $(BOOT_SOURCES_ASM)))
+
+# Lowlevel arch-specific code
+ARCH_DIR="./arch/exynos4412"
+ARCH_SOURCES_C = 
+ARCH_SOURCES_CC = exynos_smp.cc
+ARCH_SOURCES_ASM = exynos_smc.S uart_debug.S
+ARCH_OBJECT = $(patsubst %.o,$(OBJDIR)/%.o,$(notdir $(ARCH_SOURCES_C:%.c=%.o))) $(patsubst %.o,$(OBJDIR)/%.o,$(notdir $(ARCH_SOURCES_CC:%.cc=%.o)))  $(patsubst %.S,$(OBJDIR)/_%.o,$(notdir $(ARCH_SOURCES_ASM)))
+
+# Driver code
+DRIVER_DIR="./driver"
+DRIVER_SOURCES_C =
+DRIVER_SOURCES_CC = OSCCacheControl.cc ARMV7CacheControl.cc ARMGIC.cc OSCARMGIC.cc ARMMMU.cc ARMClockManagement.cc CortexA9GlobalTimer.cc  ARMV7PerformanceCounter.cc
+DRIVER_SOURCES_ASM = ARMV7CacheControl.S
+DRIVER_OBJECT = $(patsubst %.o,$(OBJDIR)/%.o,$(notdir $(DRIVER_SOURCES_C:%.c=%.o))) $(patsubst %.o,$(OBJDIR)/%.o,$(notdir $(DRIVER_SOURCES_CC:%.cc=%.o)))  $(patsubst %.S,$(OBJDIR)/_%.o,$(notdir $(DRIVER_SOURCES_ASM)))
+
+# Arch specific driver code
+ARCH_DRIVER_DIR="./arch/exynos4412/driver"
+ARCH_DRIVER_SOURCES_C = 
+ARCH_DRIVER_SOURCES_CC = ExynosUartDriver.cc ExynosMultiCoreTimer.cc ExynosClockManagement.cc
+ARCH_DRIVER_SOURCES_ASM = 
+ARCH_DRIVER_OBJECT = $(patsubst %.o,$(OBJDIR)/%.o,$(notdir $(ARCH_DRIVER_SOURCES_C:%.c=%.o))) $(patsubst %.o,$(OBJDIR)/%.o,$(notdir $(ARCH_DRIVER_SOURCES_CC:%.cc=%.o)))  $(patsubst %.S,$(OBJDIR)/_%.o,$(notdir $(ARCH_DRIVER_SOURCES_ASM)))
+
+
+# Common code (helper functions, etc)
+COMMON_DIR="./driver"
+COMMON_SOURCES_C =
+COMMON_SOURCES_CC = baremetal.cc
+COMMON_SOURCES_ASM =
+COMMON_OBJECT = $(patsubst %.o,$(OBJDIR)/%.o,$(notdir $(COMMON_SOURCES_C:%.c=%.o))) $(patsubst %.o,$(OBJDIR)/%.o,$(notdir $(COMMON_SOURCES_CC:%.cc=%.o)))  $(patsubst %.S,$(OBJDIR)/_%.o,$(notdir $(COMMON_SOURCES_ASM)))
+
+# Interrupt handling code
+INTERRUPTS_DIR="./interrupts"
+INTERRUPTS_SOURCES_CC = first_stage_handler.cc InterruptDispatcher.cc
+INTERRUPTS_SOURCES_ASM = arm_jumptable.S first_stage_handler.S
+INTERRUPTS_OBJECT = $(patsubst %.o,$(OBJDIR)/%.o,$(notdir $(INTERRUPTS_SOURCES_C:%.c=%.o))) $(patsubst %.o,$(OBJDIR)/%.o,$(notdir $(INTERRUPTS_SOURCES_CC:%.cc=%.o)))  $(patsubst %.S,$(OBJDIR)/_%.o,$(notdir $(INTERRUPTS_SOURCES_ASM)))
+
+# Event handling code
+EVENTS_DIR="./eventhandling"
+EVENTS_SOURCES_CC = EventHandler.cc EventQueue.cc
+EVENTS_SOURCES_ASM = EventHandler.S
+EVENTS_OBJECT = $(patsubst %.o,$(OBJDIR)/%.o,$(notdir $(EVENTS_SOURCES_C:%.c=%.o))) $(patsubst %.o,$(OBJDIR)/%.o,$(notdir $(EVENTS_SOURCES_CC:%.cc=%.o)))  $(patsubst %.S,$(OBJDIR)/_%.o,$(notdir $(EVENTS_SOURCES_ASM)))
+
+# Debug source code
+DEBUG_DIR="./debug"
+DEBUG_SOURCES_CC = DebugStream.cc ExynosDebug.cc
+DEBUG_SOURCES_ASM = 
+DEBUG_OBJECT = $(patsubst %.o,$(OBJDIR)/%.o,$(notdir $(DEBUG_SOURCES_C:%.c=%.o))) $(patsubst %.o,$(OBJDIR)/%.o,$(notdir $(DEBUG_SOURCES_CC:%.cc=%.o)))  $(patsubst %.S,$(OBJDIR)/_%.o,$(notdir $(DEBUG_SOURCES_ASM)))
+
+# Test source code
+TESTCOMPONENTS_DIR="./testcomponents"
+TESTCOMPONENTS_SOURCES_CC = UARTConsole.cc TestComponent.cc
+TESTCOMPONENTS_SOURCES_ASM = 
+TESTCOMPONENTS_OBJECT = $(patsubst %.o,$(OBJDIR)/%.o,$(notdir $(TESTCOMPONENTS_SOURCES_C:%.c=%.o))) $(patsubst %.o,$(OBJDIR)/%.o,$(notdir $(TESTCOMPONENTS_SOURCES_CC:%.cc=%.o)))  $(patsubst %.S,$(OBJDIR)/_%.o,$(notdir $(TESTCOMPONENTS_SOURCES_ASM)))
+
+
+# Find source code dirs
+VPATH := $(dir $(shell find . -name "*.cc") $(shell find . -name "*.c") $(shell find . -name "*.S"))
+
+
+OBJECT = $(BOOT_OBJECT) $(ARCH_OBJECT) $(ARCH_DRIVER_OBJECT) $(DRIVER_OBJECT) $(COMMON_OBJECT) $(INTERRUPTS_OBJECT) $(DEBUG_OBJECT) $(EVENTS_OBJECT) $(TESTCOMPONENTS_OBJECT)
+LINKER_OBJECTS = $(BOOT_OBJECT) $(ARCH_OBJECT) $(COMMON_OBJECT) $(DEBUG_OBJECT) $(EVENTS_OBJECT) build/ARMMMU.o build/ExynosClockManagement.o build/ARMV7PerformanceCounter.o
+DEP_FILES = $(patsubst %.d,$(DEPDIR)/%.d,$(notdir $(OBJECT:%.o=%.d)))
+
+all: $(OBJDIR)/$(SYSTEM_IMAGE).img
+
+# Create dependencies
+$(DEPDIR)/%.d : %.c
+	@echo "DEP		$@"
+	@if test \( ! \( -d $(@D) \) \) ;then mkdir -p $(@D);fi
+	$(OUTPUT) $(CC) $(CFLAGS) -MM -MT $(OBJDIR)/$*.o -MF $@ $<
+
+$(DEPDIR)/%.d : %.cc
+	@echo "DEP		$@"
+	@if test \( ! \( -d $(@D) \) \) ;then mkdir -p $(@D);fi
+	$(OUTPUT) $(CXX) $(CXXFLAGS) -MM -MT $(OBJDIR)/$*.o -MF $@ $<
+
+
+# create binary object files
+$(OBJDIR)/%.o : %.c
+	@echo "CC		$@"
+	@if test \( ! \( -d $(@D) \) \) ;then mkdir -p $(@D);fi
+	$(OUTPUT) $(CC) -c $(CFLAGS) -o $@ $<
+
+$(OBJDIR)/%.o : %.cc
+	@echo "ACXX		$@"
+	@if test \( ! \( -d $(@D) \) \) ;then mkdir -p $(@D);fi
+	$(OUTPUT) $(ACXX) -c $(ACCFLAGS) -o $@ $<
+
+$(OBJDIR)/_%.o : %.S
+	@echo "ASM		$@"
+	@if test \( ! \( -d $(@D) \) \) ;then mkdir -p $(@D);fi
+	$(OUTPUT) $(ASM) -c $(ASMFLAGS) -o $@ $<
+	
+
+# Generate OSC linker script
+$(OSC_LD_SCRIPT): $(OBJECT)
+	@echo "Generating OSC linker script"
+	./scripts/createlinkerscript.sh $(OBJDIR) $(OSC_LD_SCRIPT)
+	
+	
+# Link final binary
+$(OBJDIR)/$(SYSTEM_IMAGE): $(OBJECT) $(OSC_LD_SCRIPT) $(LD_SCRIPT)
+	@echo "First stage linking"
+	@echo "LD		$@"
+	@if test \( ! \( -d $(@D) \) \) ;then mkdir -p $(@D);fi
+	$(OUTPUT) $(LD) -static -T $(LD_SCRIPT) -o $(@) $(LDFLAGS) $(LINKER_OBJECTS) $(LDLIBS)
+
+	
+
+
+# '$(SYSTEM_FILE).img' binary to boot on the pandaboard
+
+$(OBJDIR)/$(SYSTEM_IMAGE).img : $(OBJDIR)/$(SYSTEM_IMAGE)
+	@echo "OBJCOPY		$@"
+	@if test \( ! \( -d $(@D) \) \) ;then mkdir -p $(@D);fi
+	$(OUTPUT) $(OBJCOPY) -O binary --image-base $(BASE_ADDRESS) $< $@
+	
+
+# clean target
+clean:	
+	@echo "RM		$(OBJDIR)"
+	$(OUTPUT) rm -rf $(OBJDIR)
+	@echo "RM		$(DEPDIR)"
+	$(OUTPUT) rm -rf $(DEPDIR)
+	@echo "RM		$(CONFIG_FILE)"
+	$(OUTPUT) rm -rf $(CONFIG_FILE)
+	$(OUTPUT) rm -f $(ASPECTC_REPO)
+#	@echo "Remove generated preload data"
+#	$(OUTPUT) rm -rf $(PRELOAD_DIR)
+	
+
+# include dependencies
+ifneq ($(MAKECMDGOALS),clean)
+-include $(DEP_FILES)
+endif
+
+.PHONY: clean generate_preloaddata
+	

@@ -1,0 +1,11 @@
+MCP2515		- 	JP4:
+INT		-	6
+SCK		-	11 c
+S1		-	7  c
+S0		-	9 19
+CS		-	13 9
+GND		-	19 13
+VCC		-	3
+
+
+INT -> JP4_P6 -> GPIO3_27 (PIN258 EDM)

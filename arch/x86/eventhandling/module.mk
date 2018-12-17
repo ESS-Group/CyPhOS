@@ -1,0 +1,16 @@
+###################################
+# X86 eventhandling compile units #
+###################################
+X86_EVENTHANDLING_DIR=arch/x86/eventhandling/
+X86_EVENTHANDLING_SOURCES_CC := 
+X86_EVENTHANDLING_SOURCES_ASM :=
+ifeq ($(CONFIG_AMD64), true)
+	X86_EVENTHANDLING_SOURCES_ASM += EventHandler-64.S
+else
+	X86_EVENTHANDLING_SOURCES_ASM += 
+endif
+
+X86_EVENTHANDLING_OBJECTS = $(patsubst %.o,$(OBJDIR)/$(X86_EVENTHANDLING_DIR)%.o,$(X86_EVENTHANDLING_SOURCES_CC:%.cc=%.o)) $(patsubst %.oS,$(OBJDIR)/$(X86_EVENTHANDLING_DIR)%.oS,$(X86_EVENTHANDLING_SOURCES_ASM:%.S=%.oS))
+
+COMPILE_OBJECTS += $(X86_EVENTHANDLING_OBJECTS)
+LINKER_OBJECTS += $(X86_EVENTHANDLING_OBJECTS)

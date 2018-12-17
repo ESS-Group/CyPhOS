@@ -1,0 +1,20 @@
+# Testcomponent code
+TESTCOMPONENTS_DIR=testcomponents/
+
+TESTCOMPONENTS_SOURCES_CC = UARTConsole.cc ApplicationPeriodicTest.cc ApplicationReboot.cc ApplicationSystemInfo.cc ApplicationCacheMissTest.cc
+
+#TESTCOMPONENTS_SOURCES_CC += BenchmarkCore0.cc
+
+ifeq ($(CONFIG_CAN), true)
+	TESTCOMPONENTS_SOURCES_CC += ApplicationCANTest.cc 
+endif
+
+ifeq ($(CONFIG_ARMV7), true)
+	TESTCOMPONENTS_SOURCES_CC += TLBInfo.cc
+endif
+
+TESTCOMPONENTS_SOURCES_ASM = 
+TESTCOMPONENTS_OBJECTS = $(patsubst %o,$(OBJDIR)/$(TESTCOMPONENTS_DIR)%o,$(TESTCOMPONENTS_SOURCES_CC:%.cc=%.o)) $(patsubst %.oS,$(OBJDIR)/$(TESTCOMPONENTS_DIR)%.oS,$(TESTCOMPONENTS_SOURCES_ASM:%.S=%.oS))
+
+COMPILE_OBJECTS += $(TESTCOMPONENTS_OBJECTS)
+LINKER_OBJECTS += $(TESTCOMPONENTS_OBJECTS)

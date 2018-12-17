@@ -1,0 +1,25 @@
+SECTIONS
+{
+	. = 0x82000000;     /* Exynos boot address, kernel base address in uboot */
+
+	INCLUDE arch/armv7/cortexa9/ldscript-boot.ld
+	
+	INCLUDE arch/armv7/cortexa9/ldscript-oscs.ld
+	
+    /* Constructors */
+    .init_array :
+    {
+       PROVIDE_HIDDEN (__init_array_start = .);
+       ./build/interrupts/InterruptDispatcher.o(".init*")
+       ./build/eventhandling/EventHandler.o(".init*")
+       KEEP (*(SORT(.init_array.*)))     
+       ./build/benchmarking/ResultContainer.o("*.init*");
+       KEEP (*(.init_array))
+       KEEP (*(".ctors"))
+       KEEP (*(".ctor"))
+       PROVIDE_HIDDEN (__init_array_end = .);
+    }
+	
+	INCLUDE arch/armv7/cortexa9/ldscript-end.ld
+}
+ 

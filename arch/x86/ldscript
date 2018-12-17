@@ -1,0 +1,44 @@
+SECTIONS
+{
+	. = 0x100000;     /* Base address of the image */
+
+	INCLUDE arch/x86/ldscript-boot.ld
+	
+	.pagetable :
+	{
+		. = ALIGN(0x1000);
+		__pagetable_start = .;
+		global_pml4 = .;
+		. = . + 512 * 8;
+		. = ALIGN(0x1000);
+		global_pdpe = .;
+		. = . + 512 * 8;
+		. = ALIGN(0x1000);
+		global_pde = .;
+		. = . + 512 * 8 * 512;
+		__pagetable_end = .;
+	}
+	
+	
+	INCLUDE arch/x86/ldscript-oscs.ld
+	
+    /* Constructors */
+    .init_array     :
+    {
+       PROVIDE_HIDDEN (__init_array_start = .);
+       ./build/interrupts/InterruptDispatcher.o("*.init*")
+       ./build/arch/x86/driver/CGAScreen.o("*.init*")
+       KEEP (*(SORT(.init_array.*)))
+       KEEP (*(.init_array))
+       KEEP (*(".ctors"))
+       KEEP (*(".ctor"))
+       PROVIDE_HIDDEN (__init_array_end = .);
+    }
+	
+	/*.not_cacheable :
+	{
+		./build/baremetal/MemoryProfilingSpace.o("*")
+	}*/
+	
+	INCLUDE arch/x86/ldscript-end.ld
+}

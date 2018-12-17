@@ -1,0 +1,13 @@
+
+###############################
+# Exynos4412 generic compile units #
+###############################
+CORTEXA9_BOOT_GENERIC_DIR=arch/armv7/cortexa9/boot/
+CORTEXA9_BOOT_GENERIC_SOURCES_CC = initOS.cc
+CORTEXA9_BOOT_GENERIC_SOURCES_ASM = startup.S startup_secondary.S
+CORTEXA9_BOOT_GENERIC_OBJECTS = $(patsubst %.o,$(OBJDIR)/$(CORTEXA9_BOOT_GENERIC_DIR)%.o,$(CORTEXA9_BOOT_GENERIC_SOURCES_CC:%.cc=%.o)) $(patsubst %.oS,$(OBJDIR)/$(CORTEXA9_BOOT_GENERIC_DIR)%.oS,$(CORTEXA9_BOOT_GENERIC_SOURCES_ASM:%.S=%.oS))
+
+COMPILE_OBJECTS += $(CORTEXA9_BOOT_GENERIC_OBJECTS)
+LINKER_OBJECTS += $(CORTEXA9_BOOT_GENERIC_OBJECTS)
+
+

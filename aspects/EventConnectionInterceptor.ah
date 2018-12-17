@@ -1,0 +1,63 @@
+#if 0
+
+#include <common/debug.h>
+
+#include <component/OSC.h>
+
+/* Include EventHandler to emit the actual event */
+#include <eventhandling/EventHandler.h>
+
+#define ASPECTS
+#define ASPECTS_DEBUG
+
+#define ASPECT_TAG "EVENTASPECT"
+
+aspect EventConnectionInterceptor  {
+#ifdef ASPECTS
+	advice call("% ...::...::triggerFunc_%(...)") : around() {
+		/* Get OSC and free connection */
+		OSC *destOSC = (OSC*) tjp->target();
+		if ( destOSC == NULL ) {
+			return;
+		}
+		priority_t prio = 10;
+		cpu_affinity_t affinity = 0xFF;
+		
+		/*if ( JoinPoint::ARGS > 0) {
+			prio = *((priority_t*)tjp->arg(0));
+		}
+		if ( JoinPoint::ARGS > 1) {
+			affinity = *((cpu_affinity_t*)tjp->arg(1));
+		}*/
+		
+		//DEBUG_STREAM(ASPECT_TAG,"Intercepted call to OSC: " << hex << destOSC << " and function: " << 	tjp->signature());
+		
+		/* Get free connection from src OSC */
+		EventConnection *con = EventHandler::pInstance.getConnection();
+		/* Prepare the connection for the event dispatcher */
+		if ( NULL != con ) {
+			con->pAffinity = affinity;
+			con->pDestinationOSC = destOSC;
+			con->pDestinationFunc = (void (OSC::*)(dword_t))tjp->memberptr();
+			con->pPriority = prio;
+			if ( JoinPoint::ARGS == 1) {			
+				con->mArg = *((dword_t*)tjp->arg(0));
+			}
+			/* Register this event with the EventHandler */
+			//DEBUG_STREAM(ASPECT_TAG,"Enqueing event: " << hex << con);
+			EventHandler::pInstance.emitEvent(con);
+		}
+	}
+	
+	advice call("% ...::...::event_%(...)") : around() {
+		if ( JoinPoint::ARGS != 1) {
+			return;
+		}		
+		/* Notify the EventHandler about the triggered event */
+		EventHandler::pInstance.eventTriggered((OSC*) tjp->target(),(void (OSC::*)(dword_t))tjp->memberptr(),*((dword_t*)tjp->arg(0)));
+	}
+#endif
+
+};
+
+#endif

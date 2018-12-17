@@ -1,0 +1,19 @@
+/*
+ * omap4460_registers.h
+ *
+ *  Created on: 26.04.2016
+ *      Author: hendrik
+ */
+
+#ifndef ARCH_ARMV7_OMAP4460_OMAP4460_REGISTERS_H_
+#define ARCH_ARMV7_OMAP4460_OMAP4460_REGISTERS_H_
+
+#define REG_AUX_CORE_BOOT_0 0x48281800
+#define REG_AUX_CORE_BOOT_1 0x48281804
+
+/* Reset registers */
+#define REG_EXTPWRONRSTCTRL 0x4A30A420
+#define REG_PRM_RSTCTRL 0x4A307B00
+
+
+#endif /* ARCH_ARMV7_OMAP4460_OMAP4460_REGISTERS_H_ */

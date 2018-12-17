@@ -1,0 +1,8 @@
+# Debug output code
+DEBUG_DIR=debug/
+DEBUG_SOURCES_CC =
+DEBUG_SOURCES_ASM = 
+DEBUG_OBJECTS = $(patsubst %o,$(OBJDIR)/$(DEBUG_DIR)%o,$(DEBUG_SOURCES_CC:%.cc=%.o)) $(patsubst %.oS,$(OBJDIR)/$(DEBUG_DIR)%.oS,$(DEBUG_SOURCES_ASM:%.S=%.oS))
+
+COMPILE_OBJECTS += $(DEBUG_OBJECTS)
+LINKER_OBJECTS += $(DEBUG_OBJECTS)

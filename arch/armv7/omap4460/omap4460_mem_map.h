@@ -1,0 +1,21 @@
+/*
+ * exynos_mem_map.h
+ *
+ *  Created on: 16.07.2015
+ *      Author: hendrik
+ */
+
+#ifndef ARCH_OMAP4460_EXYNOS_MEM_MAP_H_
+#define ARCH_OMAP4460_EXYNOS_MEM_MAP_H_
+
+#include <arch/armv7/driver/memory_map.h>
+
+
+#define OMAP4460_MEM_MAP { \
+		{0x0,0x40000000,MEMTYPE_BLOCKED,NONCACHEABLE,"GPMC Space"}, \
+		{0x40000000,0x40000000,MEMTYPE_DEVICE_MEMORY,NONCACHEABLE,"OMAP4460 Device Memory"}, \
+		{0x80000000,0x40000000,MEMTYPE_DRAM,CACHEABLE,"DRAM CS0"}, \
+		{0x0,0x0,MEMTYPE_MEMORY_SECTION_TYPE_LAST,NONCACHEABLE,"LISTEND"} \
+}
+
+#endif /* ARCH_OMAP4460_EXYNOS_MEM_MAP_H_ */

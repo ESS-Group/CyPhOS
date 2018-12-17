@@ -1,0 +1,102 @@
+/*
+ * IMX6GPIO.h
+ *
+ *  Created on: 05.12.2016
+ *      Author: hendrik
+ */
+
+#ifndef ARCH_ARMV7_IMX6_DRIVER_IMX6GPIO_H_
+#define ARCH_ARMV7_IMX6_DRIVER_IMX6GPIO_H_
+
+#define IOMUXC_SW_MUX_CTL_PAD_GPIO05 	0x20E023C
+#define IOMUXC_SW_PAD_CTL_PAD_GPIO05 	0x20E060C
+#define IOMUXC_SW_MUX_CTL_PAD_GPIO16	0x20E0248
+#define IOMUXC_SW_PAD_CTL_PAD_GPIO16 	0x20E0618
+#define IOMUXC_SW_MUX_CTL_PAD_KEY_COL3 	0x20E0210
+#define IOMUXC_SW_PAD_CTL_PAD_KEY_COL3	0x20E05E0
+#define IOMUXC_SW_MUX_CTL_PAD_KEY_ROW3 	0x20E0214
+#define IOMUXC_SW_PAD_CTL_PAD_KEY_ROW3 	0x20E05E4
+
+#define IOMUXC_SW_MUX_CTL_PAD_EIM_DATA27 0x20E00C0
+#define IOMUXC_SW_PAD_CTL_PAD_EIM_DATA27 0x20E03D4
+
+#define GPIO1_DR 		0x209C000
+#define GPIO1_GDIR 		0x209C004
+#define GPIO1_PSR 		0x209C008
+#define GPIO1_ICR1 		0x209C00C
+#define GPIO1_ICR2		0x209C010
+#define GPIO1_IMR		0x209C014
+#define GPIO1_ISR		0x209C018
+#define GPIO1_EDGE_SEL	0x209C01C
+
+#define GPIO3_DR 		0x20A4000
+#define GPIO3_GDIR 		0x20A4004
+#define GPIO3_PSR 		0x20A4008
+#define GPIO3_ICR1 		0x20A400C
+#define GPIO3_ICR2		0x20A4010
+#define GPIO3_IMR		0x20A4014
+#define GPIO3_ISR		0x20A4018
+#define GPIO3_EDGE_SEL	0x20A401C
+
+#define GPIO4_DR 		0x20A8000
+#define GPIO4_GDIR 		0x20A8004
+#define GPIO4_PSR 		0x20A8008
+#define GPIO4_ICR1 		0x20A800C
+#define GPIO4_ICR2		0x20A8010
+#define GPIO4_IMR		0x20A8014
+#define GPIO4_ISR		0x20A8018
+#define GPIO4_EDGE_SEL	0x20A801C
+
+#define GPIO7_DR 		0x20B4000
+#define GPIO7_GDIR 		0x20B4004
+#define GPIO7_PSR 		0x20B4008
+#define GPIO7_ICR1 		0x20B400C
+#define GPIO7_ICR2		0x20B4010
+#define GPIO7_IMR		0x20B4014
+#define GPIO7_ISR		0x20B4018
+#define GPIO7_EDGE_SEL	0x20B401C
+
+#define BREAK_SIGNAL1_PIN 		12
+#define BREAK_SIGNAL2_PIN		11
+#define ACCELERATE_SIGNAL1_PIN	13
+#define ACCELERATE_SIGNAL2_PIN 	5
+
+#define BREAK_SIGNAL1_PORT 		GPIO4_DR
+#define BREAK_SIGNAL2_PORT		GPIO7_DR
+#define ACCELERATE_SIGNAL1_PORT	GPIO4_DR
+#define ACCELERATE_SIGNAL2_PORT	GPIO1_DR
+/*ERROR Defines*/
+#define GPIO_WRONG_PARAMETER	0x2
+
+
+
+BEGIN_DECLARE_OSC(GPIO,IMX6GPIO)
+
+public:
+	IMX6GPIO();
+
+	static IMX6GPIO mInstance;
+
+	void configurePorts();
+
+	void configureInterrupts();
+
+	uint8_t readGPIO(dword_t port, uint8_t pin);
+
+	void handleInputInterrupt();
+
+	static EventHandling::Event EventGas;
+	static EventHandling::Event EventBreak;
+
+#ifdef CONFIG_IMX6_CAN_INTERRUPT
+	static EventHandling::Event EventCAN;
+#endif
+
+private :
+	static OSC* trigger_Interrupt_Deps[];
+	static EventHandling::Trigger trigger_Interrupt;
+
+
+};
+END_DECLARE_OSC
+#endif /* ARCH_ARMV7_IMX6_DRIVER_IMX6PIO_H_ */

@@ -1,0 +1,15 @@
+*.oS
+*.o
+*.acc
+build/*
+deps/*
+doc/*
+#.cproject
+#.project
+.settings/*
+#.settings/*
+objmapping*
+config_*
+OSC.ld
+aspect.acp
+stresstest/*[0-9]*

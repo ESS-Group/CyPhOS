@@ -1,0 +1,12 @@
+# Testcomponent code
+TACLEBENCH_PM_DIR=taclebench-components/pm/
+
+TACLEBENCH_PM_SOURCES_CC = pm.cc pm_input.cc pm_libm.cc pm_stdlib.cc TaclepmComponent.cc
+TACLEBENCH_PM_SOURCES_ASM = 
+TACLEBENCH_PM_OBJECTS = $(patsubst %o,$(OBJDIR)/$(TACLEBENCH_PM_DIR)%o,$(TACLEBENCH_PM_SOURCES_CC:%.cc=%.o)) $(patsubst %.oS,$(OBJDIR)/$(TACLEBENCH_PM_DIR)%.oS,$(TACLEBENCH_PM_SOURCES_ASM:%.S=%.oS))
+
+
+COMPILE_OBJECTS += $(TACLEBENCH_PM_OBJECTS)
+LINKER_OBJECTS += $(TACLEBENCH_PM_OBJECTS)
+
+CFLAGS += -DTACLE_PM

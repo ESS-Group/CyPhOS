@@ -1,0 +1,8 @@
+# Event handling code
+SYNCDIR=sync/
+SYNCSOURCES_CC = ComponentLock.cc
+SYNCSOURCES_ASM = 
+SYNCOBJECTS = $(patsubst %o,$(OBJDIR)/$(SYNCDIR)%o,$(SYNCSOURCES_CC:%.cc=%.o)) $(patsubst %.oS,$(OBJDIR)/$(SYNCDIR)%.oS,$(SYNCSOURCES_ASM:%.S=%.oS))
+
+COMPILE_OBJECTS += $(SYNCOBJECTS)
+LINKER_OBJECTS += $(SYNCOBJECTS)
