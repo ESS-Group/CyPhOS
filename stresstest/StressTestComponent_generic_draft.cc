@@ -13,6 +13,8 @@
 
 #define TAG "StressTestComponent__THISCOMPONENT__"
 
+#include <common/cyclecounter.h>
+
 #ifdef CONFIG_ARMV7
 #include <arch/armv7/driver/ARMV7CacheControl.h>
 
@@ -35,8 +37,7 @@
 #include <driver/CATManager.h>
 
 #define MEASURE_MEMORY_ACCESS(address, cycles) __asm__ __volatile__ ( \
-				"CPUID\n" \
-				"RDTSC\n" \
+				"RDTSCP\n" \
 				"SHL $32,%%rdx\n" \
 				"OR %%rdx,%%rax\n" \
 				"MOVQ %%rax,%%r8\n" \
@@ -59,7 +60,7 @@ StressTestComponent__THISCOMPONENT__ StressTestComponent__THISCOMPONENT__::mInst
 SECTION_CRITICAL_DATA OSC* StressTestComponent__THISCOMPONENT__::trigger_deps_doStress[] = {nullptr};
 
 SECTION_CRITICAL_DATA EventHandling::Trigger StressTestComponent__THISCOMPONENT__::trigger_doStress = {(OSC*)&StressTestComponent__THISCOMPONENT__::mInstance,(void (OSC::*)(dword_t))&StressTestComponent__THISCOMPONENT__::func_doStress,
-				(OSC**)&StressTestComponent__THISCOMPONENT__::trigger_deps_doStress, EventHandling::Trigger::cMIN_Priority + __THISCOMPONENT__ + 1};
+				(OSC**)&StressTestComponent__THISCOMPONENT__::trigger_deps_doStress, EventHandling::Trigger::cMIN_Priority + __THISCOMPONENT__ + 1,0x0};
 
 SECTION_CRITICAL_DATA EventHandling::Trigger StressTestComponent__THISCOMPONENT__::trigger_subscribe = {(OSC*)&StressTestComponent__THISCOMPONENT__::mInstance,(void (OSC::*)(dword_t))&StressTestComponent__THISCOMPONENT__::func_subscribe,
 				(OSC**)&StressTestComponent__THISCOMPONENT__::trigger_deps_doStress, EventHandling::Trigger::cMIN_Priority + __THISCOMPONENT__ + 2};
@@ -80,8 +81,20 @@ StressTestComponent__THISCOMPONENT__::StressTestComponent__THISCOMPONENT__() : m
 void StressTestComponent__THISCOMPONENT__::func_doStress(dword_t arg) {
 	uint32_t cycles_sum = 0;
 
+	cycle_t measure_before = 0, measure_after = 0;
+
+	RESET_READ_CYCLE_COUNTER(measure_before);
+#ifdef CONFIG_ARMV7
 	const uint32_t ram_threshold = 100;
-	const uint32_t l2_threshold = 25;
+	const uint32_t l2_threshold = 35;
+	const uint32_t l3_threshold = 0xFFFF;
+#endif
+#ifdef CONFIG_AMD64
+	// Values for the Xeon E5-1620 v4
+	const uint32_t ram_threshold = 100;
+	const uint32_t l3_threshold = 36;
+	const uint32_t l2_threshold = 32;
+#endif
 
 #define RANDOM_ACCESS
 //#define SEQUENTIAL_ACCESS
@@ -104,18 +117,27 @@ void StressTestComponent__THISCOMPONENT__::func_doStress(dword_t arg) {
 		}
 
 		if (cycles > ram_threshold) {
-//			DEBUG_STREAM(TAG,"L2 MISS at address: " << hex << i << " with cycles: " << dec << cycles);
+//			DEBUG_STREAM(TAG,"RAM hit at address: " << hex << i << " with cycles: " << dec << cycles);
 			mRamCount++;
-		}
-		if (cycles > l2_threshold) {
+		} else if (cycles > l3_threshold) {
+//			DEBUG_STREAM(TAG,"L2 MISS at address: " << hex << i << " with cycles: " << dec << cycles);
+			mL3Count++;
+		} else if (cycles > l2_threshold) {
 //			DEBUG_STREAM(TAG,"L1 MISS at address: " << hex << i << " with cycles: " << dec << cycles);
 			mL2Count++;
+		} else {
+//			DEBUG_STREAM(TAG,"L1 HIT at address: " << hex << i << " with cycles: " << dec << cycles);
 		}
 		mCountSum++;
 	}
 	mLastAverage = cycles_sum / cAccessCount;
 //	SYNC_OUTPUT_STREAM(TAG,"Average random access time: " << dec << (cycles_sum / count) << " min: " << min << " max: " << max << endl);
 	EventHandling::EventHandler::pInstance.eventTriggered(&event_Continue,0);
+
+	// Every 100 iterations print out status
+	if ((mIterations  % 100) == 0) {
+		EventHandling::EventHandler::pInstance.callOSCTrigger(&trigger_printOut, 0);
+	}
 	//READ_CYCLE_COUNTER(after);
 	//SYNC_OUTPUT_STREAM(TAG,"Execution duration on CPU: " << (uint16_t)getCPUID() << " :" << dec << (after-before) << endl);
 #endif
@@ -139,12 +161,16 @@ void StressTestComponent__THISCOMPONENT__::func_doStress(dword_t arg) {
 		}
 
 		if (cycles > ram_threshold) {
-//			DEBUG_STREAM(TAG,"L2 MISS at address: " << hex << i << " with cycles: " << dec << cycles);
+//			DEBUG_STREAM(TAG,"RAM hit at address: " << hex << i << " with cycles: " << dec << cycles);
 			mRamCount++;
-		}
-		if (cycles > l2_threshold) {
+		} else if (cycles > l3_threshold) {
+//			DEBUG_STREAM(TAG,"L2 MISS at address: " << hex << i << " with cycles: " << dec << cycles);
+			mL3Count++;
+		} else if (cycles > l2_threshold) {
 //			DEBUG_STREAM(TAG,"L1 MISS at address: " << hex << i << " with cycles: " << dec << cycles);
 			mL2Count++;
+		} else {
+//			DEBUG_STREAM(TAG,"L1 HIT at address: " << hex << i << " with cycles: " << dec << cycles);
 		}
 		mCountSum++;
 	}
@@ -152,22 +178,35 @@ void StressTestComponent__THISCOMPONENT__::func_doStress(dword_t arg) {
 	mLastAverage = cycles_sum / cAccessCount;
 //	SYNC_OUTPUT_STREAM(TAG,"Average random access time: " << dec << (cycles_sum / count) << " min: " << min << " max: " << max << endl);
 	EventHandling::EventHandler::pInstance.eventTriggered(&event_Continue,0);
+
+	// Every 100 iterations print out status
+	if ((mIterations  % 100) == 0) {
+		EventHandling::EventHandler::pInstance.callOSCTrigger(&trigger_printOut, 0);
+	}
 	//READ_CYCLE_COUNTER(after);
 	//SYNC_OUTPUT_STREAM(TAG,"Execution duration on CPU: " << (uint16_t)getCPUID() << " :" << dec <<  (after-before) << endl);
 #endif
+	READ_CYCLE_COUNTER(measure_after);
+	mLastCount++;
+	mCycles += (measure_after - measure_before);
 }
 
 void StressTestComponent__THISCOMPONENT__::func_printOut(dword_t arg) {
-	SYNC_OUTPUT_STREAM_START(TAG << ": L2 misses (estimated): " << dec << mRamCount << " rate: " << (mRamCount*100 / mCountSum) << " % ");
-	SYNC_OUTPUT_STREAM_CONTINUE("L1 misses (estimated): " << dec << mL2Count << " rate: " << (mL2Count*100 / mCountSum) << " % ");
-	SYNC_OUTPUT_STREAM_CONTINUE("Min : " << dec << mMin << " Max: " << mMax << " average: " << mLastAverage << endl);
+	SYNC_OUTPUT_STREAM_START(TAG << ": L3 misses : " << dec << mRamCount << " rate: " << (mRamCount*1000000 / mCountSum) << " ppm ");
+	SYNC_OUTPUT_STREAM_CONTINUE("L2 misses : " << dec << mL3Count << " rate: " << (mL3Count*1000000 / mCountSum) << " ppm ");
+	SYNC_OUTPUT_STREAM_CONTINUE("L1 misses : " << dec << mL2Count << " rate: " << (mL2Count*1000000 / mCountSum) << " ppm ");
+	SYNC_OUTPUT_STREAM_CONTINUE("Min : " << dec << mMin << " Max: " << mMax << " average: " << mLastAverage);
+	SYNC_OUTPUT_STREAM_CONTINUE(" Avg runtime : " << dec << (mCycles/mLastCount) << " count: " << dec << mCountSum << endl);
 	SYNC_OUTPUT_STREAM_END;
 	mCountSum = 0;
 	mRamCount = 0;
 	mLastAverage = 0;
 	mL2Count = 0;
+	mL3Count = 0;
 	mMax = 0;
 	mMin = 0xFFFFFFFF;
+	mLastCount = 0;
+	mCycles = 0;
 }
 
 void StressTestComponent__THISCOMPONENT__::func_subscribe(dword_t arg) {

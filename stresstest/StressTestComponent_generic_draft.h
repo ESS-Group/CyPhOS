@@ -38,20 +38,23 @@ public:
 #if !defined(CONFIG_CACHE_WAY_SIZE)
 #error "Your architecture lacks the definition of the cache way size"
 #endif
-	static constexpr uint32_t cArraySize = (CONFIG_CACHE_WAY_SIZE * 0.2) / 4;
-	static constexpr uint32_t cAccessCount = 20000;
+	static constexpr uint32_t cArraySize = (CONFIG_CACHE_WAY_SIZE * 0.9) / 4;
+	static constexpr uint32_t cAccessCount = 8192;
 private:
 	uint32_t mIterations;
 	uint32_t mTestData[cArraySize];
 
 
-	uint32_t mCountSum;
-	uint32_t mRamCount;
-	uint32_t mL2Count;
+	uint64_t mCountSum;
+	uint64_t mRamCount;
+	uint64_t mL2Count;
+	uint64_t mL3Count;
 
 	uint32_t mMin;
 	uint32_t mMax;
 	uint32_t mLastAverage;
+	uint32_t mLastCount;
+	uint64_t mCycles;
 };
 
 

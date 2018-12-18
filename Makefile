@@ -22,7 +22,7 @@ SUB_MODULES := arch/$(CYPHOS_ARCH)
 # Disabled modules: stresstest baremetal
 SUB_MODULES += cachemanagement common eventhandling interrupts core sync debug testcomponents driver benchmarking
 
-#SUB_MODULES += stresstest
+SUB_MODULES += stresstest
 
 # Baremetal test components to verify some behavior
 # SUB_MODULES += baremetal
