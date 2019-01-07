@@ -10,31 +10,37 @@
 
 #include <common/types.h>
 
-class Spinlock
-{
+class Spinlock {
 private:
-	volatile bool __attribute__ ((aligned (4))) lockStatus;
+	volatile uint32_t __attribute__ ((aligned (4))) available;
+	volatile uint32_t __attribute__ ((aligned (4))) active;
 public:
-	Spinlock() : lockStatus(0) {}
+	Spinlock() :
+			available(0), active(0) {
+	}
 
 	void lock() {
-        	while ( !take_if_free() ) {
-			; // spin
+		uint32_t myTicket = __atomic_fetch_add(&available, 1, __ATOMIC_ACQUIRE);
+		while (__atomic_load_n(&active, __ATOMIC_ACQUIRE) != myTicket) {
 		}
 	}
 
 	void unlock() {
-		__atomic_clear(&lockStatus,__ATOMIC_RELEASE);
+		__atomic_fetch_add(&active, 1, __ATOMIC_RELEASE);
 	}
 
 	/**
 	 * True means successfully set
 	 */
-	bool take_if_free() {	// returns true if successful, otherwise false
-		return ( __atomic_test_and_set(&lockStatus,__ATOMIC_ACQUIRE) == 0 );
+	bool take_if_free() {   // returns true if successful, otherwise false
+		uint32_t myTicket = __atomic_fetch_add(&available, 1, __ATOMIC_ACQUIRE);
+		if (__atomic_load_n(&active, __ATOMIC_ACQUIRE) != myTicket) {
+			__atomic_fetch_sub(&available,1, __ATOMIC_ACQUIRE);
+			return false;
+		}
+		return true;
 	}
 
 };
-
 
 #endif /* SYNC_SPINLOCK_H_ */
