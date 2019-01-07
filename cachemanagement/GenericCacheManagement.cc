@@ -227,7 +227,9 @@ uint64_t GenericCacheManagement::measureHitRate(uintptr_t start, uintptr_t end) 
 }
 
 void GenericCacheManagement::preloadSingleOSC(OSC *osc, cycle_t *duration) {
+#ifdef CONFIG_PROFILING_PRELOAD
 	cycle_t duration_sum = 0;
+#endif
 	cycle_t duration_temp = 0;
 
 	/* Determine OSC properties */
