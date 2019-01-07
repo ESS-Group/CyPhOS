@@ -37,6 +37,10 @@ void GenericCacheManagement::preloadOSC(OSC* osc, EventHandling::Trigger *trigge
 
 	/* First get the cache way which is the least recently used one */
 	cacheways_t lruCacheWay = getLRUWay(osc);
+	if(lruCacheWay == cMaxCacheWays) {
+		DEBUG_STREAM(TAG,"LRU did not find a free cache way, aborting execution!");
+		while(1);
+	}
 
 	/* Determine OSC properties */
 	void *oscStart = osc->getOSCStart();
@@ -72,11 +76,16 @@ void GenericCacheManagement::preloadOSC(OSC* osc, EventHandling::Trigger *trigge
 #endif
 
 	mCacheWays[lruCacheWay].oscID = osc;
+	mCacheWays[lruCacheWay].inUse = true;
 
 	/* Preload dependent OSCs */
 	OSC **dep = trigger->pDeps;
 	while(*dep != nullptr) {
 		lruCacheWay = getLRUWay(*dep);
+		if(lruCacheWay == cMaxCacheWays) {
+			DEBUG_STREAM(TAG,"LRU did not find a free cache way, aborting execution!");
+			while(1);
+		}
 
 		/* Determine OSC properties */
 		oscStart = (*dep)->getOSCStart();
@@ -112,6 +121,7 @@ void GenericCacheManagement::preloadOSC(OSC* osc, EventHandling::Trigger *trigge
 	//	DEBUG_STREAM(TAG,"Missrate: " << dec << (misses * 100/(((uintptr_t)oscEnd - (uintptr_t)oscStart)/CONFIG_CACHE_LINE_SIZE)) << " for OSC: " << hex << osc);
 #endif
 		mCacheWays[lruCacheWay].oscID = (*dep);
+		mCacheWays[lruCacheWay].inUse = true;
 
 
 		dep++;
@@ -195,27 +205,37 @@ void GenericCacheManagement::evictOSC(EventHandling::EventTask* eventtask, cycle
 cacheways_t GenericCacheManagement::getLRUWay(OSC* osc) {
 	/* Iterate over all cache ways and return least recently used cache way */
 	uint8_t maxLRUcount = 0;
-	uint8_t maxCacheWay = 0;
+	cacheways_t maxCacheWay = 0;
 
+	bool validWay = false;
 
-	for (uint8_t way = 0; way < mCacheWayCount; way++) {
+	// Check if OSC is already in a cache way
+	for (cacheways_t way = 0; way < mCacheWayCount; way++) {
 		/* Check if OSC is already in way */
 		if (mCacheWays[way].oscID == osc) {
 			/* Reset LRU count because it is used */
 			mCacheWays[way].lruCount = 0;
 			return way;
 		}
+	}
 
-
+	for (cacheways_t way = 0; way < mCacheWayCount; way++) {
 		/* Get the way and compare with max search */
 		uint8_t lruCount = mCacheWays[way].lruCount;
 		/* Only check if it is not a permanently locked way */
-		// FIXME only evict OSCs that have refCount==0
 		// Check if the cache way holds a component Heap, which is not used anymore
-		if ((!mCacheWays[way].permanentLocked) && ((mCacheWays[way].oscID == nullptr))) {
-			if (lruCount > maxLRUcount) {
+		if ((!mCacheWays[way].permanentLocked) && (!mCacheWays[way].inUse)) {
+			if (mCacheWays[way].oscID == nullptr) {
+				// Always try to use free ways first
+				maxCacheWay = way;
+				validWay = true;
+				break;
+			}
+
+			if (lruCount >= maxLRUcount) {
 				maxLRUcount = lruCount;
 				maxCacheWay = way;
+				validWay = true;
 			}
 			if (mCacheWays[way].lruCount != LRU_MAX_VALUE) {
 				mCacheWays[way].lruCount++;
@@ -223,9 +243,18 @@ cacheways_t GenericCacheManagement::getLRUWay(OSC* osc) {
 		}
 	}
 
-	mCacheWays[maxCacheWay].lruCount = 0;
-	return maxCacheWay;
-
+	// Only return a cache way if a valid way is free
+	if(validWay) {
+		if(mCacheWays[maxCacheWay].oscID != nullptr) {
+			mEvictionCount++;
+		}
+		mCacheWays[maxCacheWay].lruCount = 0;
+		mCacheWays[maxCacheWay].oscID = nullptr;
+		return maxCacheWay;
+	} else {
+		// Otherwise return this constant abort execution (SHOULD NOT HAPPEN)
+		return cMaxCacheWays;
+	}
 }
 
 void GenericCacheManagement::lookupAndEvictOSC(OSC *osc, cycle_t *duration) {
@@ -233,13 +262,17 @@ void GenericCacheManagement::lookupAndEvictOSC(OSC *osc, cycle_t *duration) {
 			DEBUG_STREAM(TAG, "Evict OSC: " << hex << osc);
 #endif
 	for(cacheways_t cacheWay = 0; cacheWay < mCacheWayCount; cacheWay++) {
-		if (mCacheWays[cacheWay].oscID ==osc) {
+		if (mCacheWays[cacheWay].oscID == osc) {
 #ifdef CONFIG_CACHE_DEBUG
 			DEBUG_STREAM(TAG, "Free cache way: " << dec << (uint16_t) cacheWay << " from OSC: " << hex << osc);
 #endif
 
+#ifdef	CONFIG_CACHE_CONTROL_EVICT_AFTER_USE
 			evictCacheWay(cacheWay,duration);
 			mCacheWays[cacheWay].oscID = nullptr;
+			mEvictionCount++;
+#endif
+			mCacheWays[cacheWay].inUse = false;
 			mCacheWays[cacheWay].lruCount = 0;
 			return;
 		}
@@ -248,6 +281,7 @@ void GenericCacheManagement::lookupAndEvictOSC(OSC *osc, cycle_t *duration) {
 
 
 void GenericCacheManagement::printCacheWayInformation() {
+	LOG_OUTPUT_STREAM(TAG,"Cache evictions: " << dec << mEvictionCount << endl);
 	LOG_OUTPUT_STREAM_START(TAG, "Cache ways:" << dec << (uint32_t)mCacheWayCount << endl);
 	LOG_OUTPUT_STREAM_CONTINUE(TAG,"avg. missrate: " << dec << mLastMissRate << endl);
 	for (cacheways_t i = 0; i < mCacheWayCount; i++) {
@@ -256,6 +290,7 @@ void GenericCacheManagement::printCacheWayInformation() {
 						<< " with id: " << hex << mCacheWays[i].oscID << endl);
 	}
 	LOG_OUTPUT_STREAM_END;
+
 }
 
 uint64_t GenericCacheManagement::measureHitRate(uintptr_t start, uintptr_t end) {

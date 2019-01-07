@@ -247,7 +247,6 @@ void EventHandler::eventTaskFinished(void *stackPointer) {
 	 */
 	eventtask->pStackpointer = nullptr;
 
-#ifdef CONFIG_CACHE_CONTROL_EVICT_AFTER_USE
 #ifdef CONFIG_PROFILING_WRITEBACK
 #ifdef CONFIG_X86_DISCARD_SMI_PROFILING
 		// Save SMI count to compare later
@@ -273,7 +272,6 @@ void EventHandler::eventTaskFinished(void *stackPointer) {
 		}
 #endif
 	}
-#endif
 #endif
 
 

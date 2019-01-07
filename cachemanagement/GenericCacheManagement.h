@@ -26,6 +26,7 @@ protected:
 			bool permanentLocked;
 			uint8_t lruCount;
 			OSC *oscID;
+			bool inUse;
 		};
 
 public:
@@ -125,6 +126,8 @@ protected:
 
 private:
 	uint64_t mLastMissRate = 0;
+
+	uint64_t mEvictionCount = 0;
 
 	void lookupAndEvictOSC(OSC *osc, cycle_t *duration);
 };
