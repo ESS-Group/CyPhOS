@@ -130,6 +130,8 @@ private:
 	uint64_t mEvictionCount = 0;
 
 	void lookupAndEvictOSC(OSC *osc, cycle_t *duration);
+
+	void preloadSingleOSC(OSC *osc, cycle_t *duration);
 };
 
 } /* namespace CacheManagement */

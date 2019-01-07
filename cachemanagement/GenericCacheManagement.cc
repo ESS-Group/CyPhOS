@@ -31,99 +31,17 @@ GenericCacheManagement::GenericCacheManagement() : mCacheWayCount(0), mCriticalW
 
 void GenericCacheManagement::preloadOSC(OSC* osc, EventHandling::Trigger *trigger, cycle_t *duration) {
 	mLock.lock();
-
 	cycle_t duration_sum = 0;
 	cycle_t duration_temp = 0;
 
-	/* First get the cache way which is the least recently used one */
-	cacheways_t lruCacheWay = getLRUWay(osc);
-	if(lruCacheWay == cMaxCacheWays) {
-		DEBUG_STREAM(TAG,"LRU did not find a free cache way, aborting execution!");
-		while(1);
-	}
-
-	/* Determine OSC properties */
-	void *oscStart = osc->getOSCStart();
-	void *oscEnd = osc->getOSCEnd();
-	void *oscTextEnd = osc->getOSCTextEnd();
-
-#ifdef CONFIG_CACHE_DEBUG
-	DEBUG_STREAM(TAG, "OSC start: " << hex << oscStart << " end: " << oscEnd);
-	DEBUG_STREAM(TAG, "OSC size in byte: " << dec << ((uintptr_t)oscEnd - (uintptr_t)oscStart));
-	DEBUG_STREAM(TAG, "Preloading OSC: " << hex << (uintptr_t) osc << " in cache way: " << dec << (dword_t)lruCacheWay);
-	DEBUG_STREAM(TAG, "OSC start: " << hex << oscStart << " end: " << oscEnd);
-	DEBUG_STREAM(TAG, "OSC size in byte: " << dec << ((uintptr_t)oscEnd - (uintptr_t)oscStart));
-#endif
-
-
-	// Load the data to the specific cache way
-	prefetchDataToWay((uintptr_t)oscStart, (uintptr_t)oscEnd, (uintptr_t)oscTextEnd, lruCacheWay,&duration_temp);
-
-#ifdef CONFIG_PROFILING_PRELOAD
-	duration_sum += duration_temp;
-#endif
-
-#ifdef CONFIG_CACHE_CHECK_MISS_RATE
-	uint64_t misses = measureHitRate((uintptr_t)oscStart, (uintptr_t)oscEnd);
-	mLastMissRate = ((mLastMissRate * 0.2) + (misses * 100/(((uintptr_t)oscEnd - (uintptr_t)oscStart)/CONFIG_CACHE_LINE_SIZE)) * 0.8);
-//
-	if ((misses * 100/(((uintptr_t)oscEnd - (uintptr_t)oscStart)/CONFIG_CACHE_LINE_SIZE)) >= 1 ) {
-		DEBUG_STREAM(TAG,"Missrate for OSC: " << hex << osc << ": " << dec << (misses * 100/(((uintptr_t)oscEnd - (uintptr_t)oscStart)/CONFIG_CACHE_LINE_SIZE)));
-	}
-
-//	DEBUG_STREAM(TAG,"Misses: " << dec << misses << " access count: " << (((uintptr_t)oscEnd - (uintptr_t)oscStart)/CONFIG_CACHE_LINE_SIZE));
-//	DEBUG_STREAM(TAG,"Missrate: " << dec << (misses * 100/(((uintptr_t)oscEnd - (uintptr_t)oscStart)/CONFIG_CACHE_LINE_SIZE)) << " for OSC: " << hex << osc);
-#endif
-
-	mCacheWays[lruCacheWay].oscID = osc;
-	mCacheWays[lruCacheWay].inUse = true;
-
+	preloadSingleOSC(osc, duration);
 	/* Preload dependent OSCs */
 	OSC **dep = trigger->pDeps;
 	while(*dep != nullptr) {
-		lruCacheWay = getLRUWay(*dep);
-		if(lruCacheWay == cMaxCacheWays) {
-			DEBUG_STREAM(TAG,"LRU did not find a free cache way, aborting execution!");
-			while(1);
-		}
-
-		/* Determine OSC properties */
-		oscStart = (*dep)->getOSCStart();
-		oscEnd = (*dep)->getOSCEnd();
-		oscTextEnd = (*dep)->getOSCTextEnd();
-
-#ifdef CONFIG_CACHE_DEBUG
-	DEBUG_STREAM(TAG, "Depending OSC start: " << hex << oscStart << " end: " << oscEnd);
-	DEBUG_STREAM(TAG, "OSC size in byte: " << dec << ((uintptr_t)oscEnd - (uintptr_t)oscStart));
-
-	DEBUG_STREAM(TAG, "Preloading depending OSC: " << hex << (uintptr_t) (*dep) << " in cache way: " << dec << (dword_t)lruCacheWay);
-	DEBUG_STREAM(TAG, "OSC start: " << hex << oscStart << " end: " << oscEnd);
-	DEBUG_STREAM(TAG, "OSC size in byte: " << dec << ((uintptr_t)oscEnd - (uintptr_t)oscStart));
-#endif
-
-
-		// Load the data to the specific cache way
-		prefetchDataToWay((uintptr_t)oscStart, (uintptr_t)oscEnd, (uintptr_t)oscTextEnd, lruCacheWay, &duration_temp);
-
+		preloadSingleOSC((*dep), &duration_temp);
 #ifdef CONFIG_PROFILING_PRELOAD
-		duration_sum += duration_temp;
+	duration_sum += duration_temp;
 #endif
-
-#ifdef CONFIG_CACHE_CHECK_MISS_RATE
-		misses = measureHitRate((uintptr_t)oscStart, (uintptr_t)oscEnd);
-
-		if ((misses * 100/(((uintptr_t)oscEnd - (uintptr_t)oscStart)/CONFIG_CACHE_LINE_SIZE)) >= 1 ) {
-			DEBUG_STREAM(TAG,"Missrate for OSC: " << hex << (*dep) << ": " << dec << (misses * 100/(((uintptr_t)oscEnd - (uintptr_t)oscStart)/CONFIG_CACHE_LINE_SIZE)));
-		}
-		mLastMissRate = ((mLastMissRate * 0.2) + (misses * 100/(((uintptr_t)oscEnd - (uintptr_t)oscStart)/CONFIG_CACHE_LINE_SIZE))* 0.8 );
-
-	// DEBUG_STREAM(TAG,"Misses: " << dec << misses << " access count: " << (((uintptr_t)oscEnd - (uintptr_t)oscStart)/CONFIG_CACHE_LINE_SIZE));
-	//	DEBUG_STREAM(TAG,"Missrate: " << dec << (misses * 100/(((uintptr_t)oscEnd - (uintptr_t)oscStart)/CONFIG_CACHE_LINE_SIZE)) << " for OSC: " << hex << osc);
-#endif
-		mCacheWays[lruCacheWay].oscID = (*dep);
-		mCacheWays[lruCacheWay].inUse = true;
-
-
 		dep++;
 	}
 
@@ -305,6 +223,45 @@ uint64_t GenericCacheManagement::measureHitRate(uintptr_t start, uintptr_t end) 
 		}
 	}
 	return retVal;
+}
+
+void GenericCacheManagement::preloadSingleOSC(OSC *osc, cycle_t *duration) {
+	cycle_t duration_sum = 0;
+	cycle_t duration_temp = 0;
+
+	/* First get the cache way which is the least recently used one */
+	cacheways_t lruCacheWay = getLRUWay(osc);
+	if(lruCacheWay == cMaxCacheWays) {
+		DEBUG_STREAM(TAG,"LRU did not find a free cache way, aborting execution!");
+		while(1);
+	}
+
+	/* Determine OSC properties */
+	uintptr_t oscStart = (uintptr_t)osc->getOSCStart();
+	uintptr_t oscEnd = (uintptr_t)osc->getOSCEnd();
+	uintptr_t oscTextEnd = (uintptr_t)osc->getOSCTextEnd();
+
+#ifdef CONFIG_CACHE_DEBUG
+	DEBUG_STREAM(TAG, "OSC start: " << hex << oscStart << " end: " << oscEnd);
+	DEBUG_STREAM(TAG, "OSC size in byte: " << dec << ((uintptr_t)oscEnd - (uintptr_t)oscStart));
+	DEBUG_STREAM(TAG, "Preloading OSC: " << hex << (uintptr_t) osc << " in cache way: " << dec << (dword_t)lruCacheWay);
+	DEBUG_STREAM(TAG, "OSC start: " << hex << oscStart << " end: " << oscEnd);
+	DEBUG_STREAM(TAG, "OSC size in byte: " << dec << ((uintptr_t)oscEnd - (uintptr_t)oscStart));
+#endif
+
+
+	// Load the data to the specific cache way
+	prefetchDataToWay(oscStart, oscEnd, oscTextEnd, lruCacheWay,&duration_temp);
+
+#ifdef CONFIG_PROFILING_PRELOAD
+	duration_sum += duration_temp;
+	*duration = duration_sum;
+#endif
+
+	mCacheWays[lruCacheWay].oscID = osc;
+	mCacheWays[lruCacheWay].inUse = true;
+
+
 }
 
 } /* namespace CacheManagement */
