@@ -120,7 +120,7 @@ void GenericCacheManagement::evictOSC(EventHandling::EventTask* eventtask, cycle
 	mLock.unlock();
 }
 
-cacheways_t GenericCacheManagement::getLRUWay(OSC* osc) {
+cacheways_t GenericCacheManagement::getLRUWay(OSC* osc, uintptr_t dataStart) {
 	/* Iterate over all cache ways and return least recently used cache way */
 	uint8_t maxLRUcount = 0;
 	cacheways_t maxCacheWay = 0;
@@ -130,7 +130,7 @@ cacheways_t GenericCacheManagement::getLRUWay(OSC* osc) {
 	// Check if OSC is already in a cache way
 	for (cacheways_t way = 0; way < mCacheWayCount; way++) {
 		/* Check if OSC is already in way */
-		if (mCacheWays[way].oscID == osc) {
+		if (mCacheWays[way].oscID == osc && mCacheWays[way].dataStart == dataStart) {
 			/* Reset LRU count because it is used */
 			mCacheWays[way].lruCount = 0;
 			return way;
@@ -168,6 +168,7 @@ cacheways_t GenericCacheManagement::getLRUWay(OSC* osc) {
 		}
 		mCacheWays[maxCacheWay].lruCount = 0;
 		mCacheWays[maxCacheWay].oscID = nullptr;
+		mCacheWays[maxCacheWay].dataStart = 0;
 		return maxCacheWay;
 	} else {
 		// Otherwise return this constant abort execution (SHOULD NOT HAPPEN)
@@ -229,39 +230,47 @@ void GenericCacheManagement::preloadSingleOSC(OSC *osc, cycle_t *duration) {
 	cycle_t duration_sum = 0;
 	cycle_t duration_temp = 0;
 
-	/* First get the cache way which is the least recently used one */
-	cacheways_t lruCacheWay = getLRUWay(osc);
-	if(lruCacheWay == cMaxCacheWays) {
-		DEBUG_STREAM(TAG,"LRU did not find a free cache way, aborting execution!");
-		while(1);
-	}
-
 	/* Determine OSC properties */
 	uintptr_t oscStart = (uintptr_t)osc->getOSCStart();
 	uintptr_t oscEnd = (uintptr_t)osc->getOSCEnd();
 	uintptr_t oscTextEnd = (uintptr_t)osc->getOSCTextEnd();
 
-#ifdef CONFIG_CACHE_DEBUG
-	DEBUG_STREAM(TAG, "OSC start: " << hex << oscStart << " end: " << oscEnd);
-	DEBUG_STREAM(TAG, "OSC size in byte: " << dec << ((uintptr_t)oscEnd - (uintptr_t)oscStart));
-	DEBUG_STREAM(TAG, "Preloading OSC: " << hex << (uintptr_t) osc << " in cache way: " << dec << (dword_t)lruCacheWay);
-	DEBUG_STREAM(TAG, "OSC start: " << hex << oscStart << " end: " << oscEnd);
-	DEBUG_STREAM(TAG, "OSC size in byte: " << dec << ((uintptr_t)oscEnd - (uintptr_t)oscStart));
-#endif
+	uintptr_t preloadEnd;
 
+	while (oscStart < oscEnd) {
+		/* First get the cache way which is the least recently used one */
+		cacheways_t lruCacheWay = getLRUWay(osc,oscStart);
+		if(lruCacheWay == cMaxCacheWays) {
+			DEBUG_STREAM(TAG,"LRU did not find a free cache way, aborting execution!");
+			while(1);
+		}
 
-	// Load the data to the specific cache way
-	prefetchDataToWay(oscStart, oscEnd, oscTextEnd, lruCacheWay,&duration_temp);
+		preloadEnd = oscStart + (CONFIG_CACHE_WAY_SIZE - 4);
+		if (preloadEnd > oscEnd) {
+			preloadEnd = oscEnd;
+		}
+
+		// Load the data to the specific cache way
+		prefetchDataToWay(oscStart, preloadEnd, oscTextEnd <= preloadEnd ? oscTextEnd : preloadEnd, lruCacheWay, &duration_temp);
+
+		mCacheWays[lruCacheWay].oscID = osc;
+		mCacheWays[lruCacheWay].dataStart = oscStart;
+		mCacheWays[lruCacheWay].inUse = true;
+
+		oscStart = preloadEnd + 4;
+		if (oscStart > oscEnd) {
+			oscStart = oscEnd;
+		}
 
 #ifdef CONFIG_PROFILING_PRELOAD
-	duration_sum += duration_temp;
+		duration_sum += duration_temp;
+#endif
+	}
+
+
+#ifdef CONFIG_PROFILING_PRELOAD
 	*duration = duration_sum;
 #endif
-
-	mCacheWays[lruCacheWay].oscID = osc;
-	mCacheWays[lruCacheWay].inUse = true;
-
-
 }
 
 } /* namespace CacheManagement */

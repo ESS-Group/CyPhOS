@@ -26,6 +26,7 @@ protected:
 			bool permanentLocked;
 			uint8_t lruCount;
 			OSC *oscID;
+			uintptr_t dataStart;
 			bool inUse;
 		};
 
@@ -120,7 +121,7 @@ protected:
 	 * @param osc Component to be preloaded to the cache.
 	 * @return
 	 */
-	cacheways_t getLRUWay(OSC *osc);
+	cacheways_t getLRUWay(OSC *osc, uintptr_t dataStart);
 
 	virtual cycle_t getRAMAccessTimeThreshold() = 0;
 
