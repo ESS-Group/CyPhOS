@@ -323,7 +323,7 @@ void EventHandler::eventTaskFinished(void *stackPointer) {
 #ifdef CONFIG_CACHE_CONTROL
 
 	OSC *destOSC = event->trigger->pDestinationOSC;
-#ifdef CONFIG_PROFILING_PRELOAD
+#if defined(CONFIG_PROFILING_PRELOAD) || defined(CONFIG_PROFILING_PRELOAD_OVERHEAD)
 
 #ifdef CONFIG_X86_DISCARD_SMI_PROFILING
 		// Save SMI count to compare later
@@ -332,11 +332,20 @@ void EventHandler::eventTaskFinished(void *stackPointer) {
 
 #endif
 	cycle_t cycles_preload;
+#ifdef CONFIG_PROFILING_PRELOAD_OVERHEAD
+	cycle_t cycles_preload_before;
+	RESET_READ_CYCLE_COUNTER(cycles_preload_before);
+#endif
+
 	// Call the cache management to preload the OSC to the cache
 	CacheManagement::GenericCacheManagement::sInstance->preloadOSC(destOSC,event->trigger,&cycles_preload);
+#ifdef CONFIG_PROFILING_PRELOAD_OVERHEAD
+	READ_CYCLE_COUNTER(cycles_preload);
+	cycles_preload -= cycles_preload_before;
+#endif
 
 
-#ifdef CONFIG_PROFILING_PRELOAD
+#if defined(CONFIG_PROFILING_PRELOAD) || defined(CONFIG_PROFILING_PRELOAD_OVERHEAD)
 	if (profiling_trigger_included(event->trigger)) {
 #ifdef CONFIG_X86_DISCARD_SMI_PROFILING
 		// Compare SMI count. If it differs an SMI occurred during measurement -> discard
