@@ -82,8 +82,6 @@ static EventHandling::Trigger* profiling_included_triggers[] = {
 	/**
 	 * Saves SMI Count before profiling to compare
 	 */
-	static uint32_t sSMICounts[NR_CPUS];
-
 	static uint32_t sSMIDiscards[NR_CPUS];
 #endif
 
@@ -253,8 +251,8 @@ void EventHandler::eventTaskFinished(void *stackPointer) {
 		sSMICounts[cpuID] = readMSR(COMMON_MSR_SMI_COUNT);
 #endif
 	// FIXME move profiling to CacheManagment
-	cycle_t cycles_evict = 0;
 #endif
+	cycle_t cycles_evict = 0;
 
 	// Call the cache management to evict the component from the cache
 	CacheManagement::GenericCacheManagement::sInstance->evictOSC(eventtask, &cycles_evict);
