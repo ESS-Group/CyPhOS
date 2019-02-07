@@ -47,7 +47,7 @@ void X86MMU::setRangeCacheable(uintptr_t from, uintptr_t to, bool cacheable) {
 uintptr_t X86MMU::virtualToPhysical(uintptr_t address) {
 	X86Pagetable::pteEntry_t *pteEntry = getPTEEntryFromAddress(address);
 
-	uintptr_t physicalAddress = pteEntry->physicalPageBaseAddress + (address & 0x1FF);
+	uintptr_t physicalAddress = (pteEntry->physicalPageBaseAddress << 12) | (address & 0x1FF);
 
 	return physicalAddress;
 }
@@ -90,6 +90,22 @@ void X86MMU::flushTLB() {
 			"mov %%rax, %%cr3\n":::"memory","rax");
 }
 
+void X86MMU::moveVirtualPageToPhysicalAddress(uintptr_t virtualPage, uintptr_t physicalPage) {
+	DEBUG_STREAM(TAG,"Move virtual page:" << hex << virtualPage << " to physical page: " << physicalPage);
+	// Memory move
+	uint64_t *source = (uint64_t*)virtualPage;
+	uint64_t *destination = (uint64_t*)physicalPage;
+	for(uint32_t i = 0; i < 4096; i += 8) {
+		*destination++ = *source;
+
+		// Clear old memory
+		*source++ = 0x0;
+	}
+
+
+	mapVirtualPageToPhysicalAddress(virtualPage, physicalPage);
+}
+
 void X86MMU::flushTLBWithAddress(uintptr_t address) {
 	__asm__ __volatile__ (
 			"MFENCE\n"
@@ -120,4 +136,12 @@ void X86MMU::activatePagetable(uintptr_t table) {
 			"mov %0, %%cr3\n"::"r"(table):"memory");
 
 	DEBUG_STREAM(TAG,"Finished");
+}
+
+void X86MMU::mapVirtualPageToPhysicalAddress(uintptr_t virtualPage, uintptr_t physicalPage) {
+	X86Pagetable::pteEntry_t *pte = getPTEEntryFromAddress(virtualPage);
+
+	pte->physicalPageBaseAddress = (physicalPage & 0xFFFFFFFFFF000) >> 12;
+
+	flushTLBWithAddress(physicalPage);
 }

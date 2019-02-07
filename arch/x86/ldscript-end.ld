@@ -52,6 +52,9 @@
 		__benchmark_results__end = .;
 	}
 	
+	. = ALIGN(0x1000);
+	__osc_move_test = .;
+	
 	/* 
 	 * Necessary for CATTest baremetal application 
 	 *. = ALIGN(0x200000);
