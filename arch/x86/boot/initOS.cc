@@ -46,6 +46,7 @@
 #include <driver/CATManager.h>
 
 #include <driver/X86MMU.h>
+#include <driver/X86Pagetable.h>
 
 #include <common/cpuid.h>
 
@@ -103,7 +104,11 @@ void printMemory(uintptr_t start, uint64_t length) {
 	readCPUID(&code, (uint32_t*) (vendor), (uint32_t*) (vendor + 8), (uint32_t*) (vendor + 4));
 	DEBUG_STREAM(TAG, "Vendor: " << vendor);
 
+
+	X86Pagetable::sInstances[0].fillLinear();
 	X86MMU::mInstance.printInformation();
+	X86MMU::mInstance.activatePagetable(X86Pagetable::sInstances[0].getBaseAddress());
+
 
 	/* Set certain regions to cacheable */
 	DEBUG_STREAM(TAG, "Set OSC region to cacheable");
@@ -199,6 +204,10 @@ void printMemory(uintptr_t start, uint64_t length) {
 [[noreturn]] void init_secondary_cpu_c(void *stackpointer) {
 	Core::SystemMode::mInstance.disableInterrupts();
 	DEBUG_STREAM(TAG, "Stackpointer: " << hex << stackpointer);
+
+	X86Pagetable::sInstances[getCPUID()].copyFromPagetable(&X86Pagetable::sInstances[0]);
+	X86MMU::mInstance.activatePagetable(X86Pagetable::sInstances[getCPUID()].getBaseAddress());
+
 	LegacyPIC::mInstance.disable();
 
 	// Initialize the Local APIC
