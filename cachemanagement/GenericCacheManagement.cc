@@ -63,7 +63,7 @@ void GenericCacheManagement::preloadCriticalData(void* start, void* end, void* t
 
 	while (oscStart < oscEnd) {
 		// FIXME use config option
-		preloadEnd = oscStart + (CONFIG_CACHE_WAY_SIZE - 4);
+		preloadEnd = oscStart + (getCacheWaySize() - 4);
 		if (preloadEnd > oscEnd) {
 			preloadEnd = oscEnd;
 		}
@@ -247,7 +247,7 @@ void GenericCacheManagement::preloadSingleOSC(OSC *osc, cycle_t *duration) {
 			while(1);
 		}
 
-		preloadEnd = oscStart + (CONFIG_CACHE_WAY_SIZE - 4);
+		preloadEnd = oscStart + (getCacheWaySize() - 4);
 		if (preloadEnd > oscEnd) {
 			preloadEnd = oscEnd;
 		}

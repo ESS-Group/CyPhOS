@@ -239,4 +239,8 @@ void CATManager::enableProcessorCAT() {
 	disableAllWays();
 }
 
+size_t CATManager::getCacheWaySize() {
+	return cCACHE_WAY_SIZE;
+}
+
 }

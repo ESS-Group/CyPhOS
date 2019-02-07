@@ -69,7 +69,7 @@ protected:
 	/**
 	 * Defined maximum of cache ways in a system
 	 */
-	static constexpr cacheways_t cMaxCacheWays = 20;
+	static constexpr cacheways_t cMaxCacheWays = 128;
 
 	/**
 	 * Actual count of cache ways in the running system
@@ -124,6 +124,8 @@ protected:
 	cacheways_t getLRUWay(OSC *osc, uintptr_t dataStart);
 
 	virtual cycle_t getRAMAccessTimeThreshold() = 0;
+
+	virtual size_t getCacheWaySize() = 0;
 
 private:
 	uint64_t mLastMissRate = 0;

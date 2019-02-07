@@ -46,6 +46,13 @@ protected:
 	 * @param size End address to evict
 	 */
 	virtual void evictMemoryRange(uintptr_t start, uint64_t size);
+
+	virtual void printCacheWayInformation();
+
+	virtual size_t getCacheWaySize();
+
+private:
+	void distributeDataOverColor(uintptr_t start, uintptr_t end);
 };
 
 }

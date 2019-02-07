@@ -69,6 +69,7 @@ public:
 	 */
 	static CATManager sInstance;
 private:
+	static constexpr size_t cCACHE_WAY_SIZE = 512 * 1024;
 	/**
 	 * Enumerates the capabilities for Intel CAT on the running machine. Sets all the properties
 	 * regarding CAT
@@ -151,6 +152,9 @@ private:
 	uint8_t mWayBitMapping[cCOSMaxStatic];
 
 	uint32_t mStandbyMask[NR_CPUS];
+
+protected:
+	virtual size_t getCacheWaySize();
 
 };
 } /* namespace CacheManagement */
