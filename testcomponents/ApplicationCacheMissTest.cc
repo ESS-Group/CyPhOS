@@ -158,7 +158,7 @@ DEFINE_TRIGGER_FUNC(ApplicationCacheMissTest,verifyCache) {
 	CacheManagement::ARMV7CacheControl::pInstance.clean_Data_Caches();
 #endif
 //	DEBUG_STREAM(TAG,"Flushing caches from: " << hex << mTestData << " to: " << ((uintptr_t)mTestData + cTestSize) );
-#ifdef CONFIG_AMD64
+#ifdef CONFIG_AMD64_CAT
 	CacheManagement::CATManager::sInstance.evictMemoryRange((uintptr_t)mTestData, cTestSize);
 #endif
 //	DEBUG_STREAM(TAG,"L1 Cache cleaned from: " << hex << mTestData << " to: " << ((uintptr_t)mTestData + cTestSize));

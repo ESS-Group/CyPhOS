@@ -12,7 +12,9 @@
 
 #include "X86Pagetable.h"
 
-class X86MMU {
+#include <driver/GenericMMU.h>
+
+class X86MMU : public GenericMMU {
 public:
 
 	X86MMU();
@@ -27,7 +29,6 @@ public:
 
 	void activatePagetable(uintptr_t table);
 
-	void moveVirtualPageToPhysicalAddress(uintptr_t virtualPage, uintptr_t physicalPage);
 private:
 	static constexpr uint16_t cMSR_PAT = 0x277;
 	static constexpr uint32_t cCPUPID_PAT_SUPPORT = 0x1;
@@ -39,7 +40,7 @@ private:
 	void flushTLB();
 	void flushTLBWithAddress(uintptr_t address);
 
-	void mapVirtualPageToPhysicalAddress(uintptr_t virtualPage, uintptr_t physicalPage);
+	virtual void mapVirtualPageToPhysicalAddress(uintptr_t virtualPage, uintptr_t physicalPage);
 };
 
 #endif /* ARCH_X86_DRIVER_X86MMU_H_ */

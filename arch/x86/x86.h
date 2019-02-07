@@ -34,6 +34,7 @@
 #include <arch/x86/driver/DebugStream.h>
 #define DEBUG_STREAM_DEVICE DebugStream::mInstance
 
+#define CONFIG_AMD64_CACHE_COLORING
 
 // DEBUG DEFINES
 #define CONFIG_DEBUG_ACPI

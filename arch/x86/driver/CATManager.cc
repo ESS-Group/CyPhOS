@@ -17,7 +17,10 @@
 #define TAG "CAT"
 
 namespace CacheManagement {
+
+#ifdef CONFIG_AMD64_CAT
 CATManager CATManager::sInstance;
+#endif
 
 CATManager::CATManager() : X86CacheManagement() {
 }

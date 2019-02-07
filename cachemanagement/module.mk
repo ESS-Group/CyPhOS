@@ -1,6 +1,6 @@
 # Geneic cache management code code
 CACHEMANAGEMENT_DIR=cachemanagement/
-CACHEMANAGEMENT_SOURCES_CC = GenericCacheManagement.cc
+CACHEMANAGEMENT_SOURCES_CC = GenericCacheManagement.cc CacheColoring.cc
 CACHEMANAGEMENT_SOURCES_ASM = 
 CACHEMANAGEMENT_OBJECTS = $(patsubst %o,$(OBJDIR)/$(CACHEMANAGEMENT_DIR)%o,$(CACHEMANAGEMENT_SOURCES_CC:%.cc=%.o)) $(patsubst %.oS,$(OBJDIR)/$(CACHEMANAGEMENT_DIR)%.oS,$(CACHEMANAGEMENT_SOURCES_ASM:%.S=%.oS))
 

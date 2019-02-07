@@ -42,8 +42,11 @@
 #include <driver/GenericTimer.h>
 
 #include <driver/SMPManager.h>
-
+#ifdef CONFIG_AMD64_CAT
 #include <driver/CATManager.h>
+#endif
+
+#include <cachemanagement/GenericCacheManagement.h>
 
 #include <driver/X86MMU.h>
 #include <driver/X86Pagetable.h>
@@ -176,8 +179,10 @@ void printMemory(uintptr_t start, uint64_t length) {
 	// Initialize & calibrate periodic hardware timer
 	OSC_PREFIX(Timer)::GenericTimer::pInstance->initializeTimer();
 
+#ifdef CONFIG_AMD64_CAT
 	// Initialize CAT (if available)
 	CacheManagement::CATManager::sInstance.initialize();
+#endif
 
 	/* If OS-controlled cache management is enabled, make sure that the critical parts (interrupt,eventhandling) are
 	 * locked & loaded in the cache.
@@ -225,7 +230,9 @@ void printMemory(uintptr_t start, uint64_t length) {
 	LocalAPIC::mInstance.initialize();
 	DEBUG_STREAM(TAG, "secondary LocalAPIC initialized");
 
+#ifdef CONFIG_AMD64_CAT
 	CacheManagement::CATManager::sInstance.initialize();
+#endif
 
 	IDTManager::mInstance.loadIDT();
 
