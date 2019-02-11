@@ -34,11 +34,17 @@
 #include <arch/x86/driver/DebugStream.h>
 #define DEBUG_STREAM_DEVICE DebugStream::mInstance
 
+#ifdef CONFIG_CACHE_CONTROL
+#ifdef CONFIG_PAGE_COLORING
 #define CONFIG_AMD64_CACHE_COLORING
+#else
+#define CONFIG_AMD64_CAT
+#endif
+#endif
 
 // DEBUG DEFINES
 #define CONFIG_DEBUG_ACPI
-#define CONFIG_X86_DEBUG_MMU
+//#define CONFIG_X86_DEBUG_MMU
 #define CONFIG_X86_PRINT_MADT_ENTRIES
 #define CONFIG_X86_DEBUG_IOAPIC
 //#define CONFIG_X86_DEBUG_CAT

@@ -335,7 +335,12 @@ init_longmode_ap:
 	or      $(1 << 5), %eax
 	mov     %eax, %cr4
 
-	call enable_paging
+	// Writeback cache contents
+	WBINVD
+	// Set base pointer
+    mov     $ap_pagetable, %eax
+    mov		(%eax),%ebx
+	mov     %ebx, %cr3
 
 
 	// activate long-mode within compatibility-mode
@@ -395,3 +400,8 @@ multiboot2_magic_value:
 
 multiboot2_information_pointer:
 .long 0x0
+
+.global ap_pagetable
+.align 4
+ap_pagetable:
+	.long 0x0;

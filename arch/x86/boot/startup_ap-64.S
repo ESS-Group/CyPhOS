@@ -65,3 +65,4 @@ ap_idt:
 	.word 0x0
 startup_ap_end:
 
+

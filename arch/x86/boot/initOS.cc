@@ -79,7 +79,9 @@ extern uintptr_t __critical_osc_end;
 extern uintptr_t __oscs__start;
 extern uintptr_t __oscs__end;
 
-extern uintptr_t __osc_move_test;
+extern uintptr_t __cache_coloring_start;
+
+
 
 #ifdef CONFIG_BAREMETAL_APPLICATION
 extern void __attribute__ ((weak)) (*baremetal_entry_points[])();
@@ -116,13 +118,13 @@ void printMemory(uintptr_t start, uint64_t length) {
 	X86Pagetable::sInstances[0].fillLinear();
 	X86MMU::mInstance.printInformation();
 	X86MMU::mInstance.activatePagetable(X86Pagetable::sInstances[0].getBaseAddress());
-
+//
 	// FIXME test OSC movement
-	uintptr_t testOSC_start = (uintptr_t)OSC_PREFIX(ApplicationCacheMissTest)::ApplicationCacheMissTest::mInstance.getOSCStart();
-	uintptr_t testOSC_end = (uintptr_t)OSC_PREFIX(ApplicationCacheMissTest)::ApplicationCacheMissTest::mInstance.getOSCEnd();
-	for (uintptr_t current = 0; testOSC_start + current < testOSC_end; current += 4096) {
-		X86MMU::mInstance.moveVirtualPageToPhysicalAddress(testOSC_start + current, (uintptr_t)&__osc_move_test + current);
-	}
+//	uintptr_t testOSC_start = (uintptr_t)&__oscs__start;
+//	uintptr_t testOSC_end = (uintptr_t)&__oscs__end;
+//	for (uintptr_t current = 0; testOSC_start + current < testOSC_end; current += 4096) {
+//		X86MMU::mInstance.moveVirtualPageToPhysicalAddress(testOSC_start + current, (uintptr_t)&__cache_coloring_start + current);
+//	}
 
 	/* Set certain regions to cacheable */
 	DEBUG_STREAM(TAG, "Set OSC region to cacheable");
@@ -196,7 +198,9 @@ void printMemory(uintptr_t start, uint64_t length) {
 #endif
 
 	// Boot secondary processors
+#ifdef CONFIG_BOOT_MULTICORE
 	SMPManager::sInstance.initializeSMP();
+#endif
 
 #ifdef CONFIG_BAREMETAL_APPLICATION
 	void (*entry_func)(void);
@@ -221,8 +225,8 @@ void printMemory(uintptr_t start, uint64_t length) {
 	Core::SystemMode::mInstance.disableInterrupts();
 	DEBUG_STREAM(TAG, "Stackpointer: " << hex << stackpointer);
 
-	X86Pagetable::sInstances[getCPUID()].copyFromPagetable(&X86Pagetable::sInstances[0]);
-	X86MMU::mInstance.activatePagetable(X86Pagetable::sInstances[getCPUID()].getBaseAddress());
+//	X86Pagetable::sInstances[getCPUID()].copyFromPagetable(&X86Pagetable::sInstances[0]);
+	X86MMU::mInstance.activatePagetable(X86Pagetable::sInstances[0].getBaseAddress());
 
 	LegacyPIC::mInstance.disable();
 

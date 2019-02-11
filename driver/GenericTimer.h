@@ -90,7 +90,7 @@ protected:
 	/**
 	 * Interval of the base hardware timer to be used in us.
 	 */
-	static constexpr uint32_t cTimerInterval = 1000;
+	static constexpr uint32_t cTimerInterval = 1000000;
 
 	virtual void setInterrupt(bool enable) = 0;
 	virtual void setPeriodic(uint64_t us) = 0;

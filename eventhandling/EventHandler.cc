@@ -55,6 +55,8 @@ SingleQueuePriorityStrategy SingleQueuePriorityStrategy::pInstance;
 #include <common/cyclecounter.h>
 #endif
 
+#include <driver/GenericMMU.h>
+
 #ifdef CONFIG_X86_DISCARD_SMI_PROFILING
 #include <common/msr.h>
 #endif
@@ -245,6 +247,8 @@ void EventHandler::eventTaskFinished(void *stackPointer) {
 	 */
 	eventtask->pStackpointer = nullptr;
 
+#ifdef CONFIG_CACHE_CONTROL
+
 #ifdef CONFIG_PROFILING_WRITEBACK
 #ifdef CONFIG_X86_DISCARD_SMI_PROFILING
 		// Save SMI count to compare later
@@ -253,9 +257,14 @@ void EventHandler::eventTaskFinished(void *stackPointer) {
 	// FIXME move profiling to CacheManagment
 #endif
 	cycle_t cycles_evict = 0;
-
+#ifdef CONFIG_PAGE_COLORING
+	pDataMovementLock.lock();
+#endif
 	// Call the cache management to evict the component from the cache
 	CacheManagement::GenericCacheManagement::sInstance->evictOSC(eventtask, &cycles_evict);
+#ifdef CONFIG_PAGE_COLORING
+	pDataMovementLock.unlock();
+#endif
 
 #ifdef CONFIG_PROFILING_WRITEBACK
 	if (profileTrigger) {
@@ -272,6 +281,7 @@ void EventHandler::eventTaskFinished(void *stackPointer) {
 	}
 #endif
 
+#endif
 
 #ifdef CONFIG_LOCK_OSC
 	unlockTask(eventtask);
@@ -333,10 +343,17 @@ void EventHandler::eventTaskFinished(void *stackPointer) {
 #ifdef CONFIG_PROFILING_PRELOAD_OVERHEAD
 	cycle_t cycles_preload_before;
 	RESET_READ_CYCLE_COUNTER(cycles_preload_before);
+
 #endif
 
+#ifdef CONFIG_PAGE_COLORING
+	pDataMovementLock.lock();
+#endif
 	// Call the cache management to preload the OSC to the cache
 	CacheManagement::GenericCacheManagement::sInstance->preloadOSC(destOSC,event->trigger,&cycles_preload);
+#ifdef CONFIG_PAGE_COLORING
+	pDataMovementLock.unlock();
+#endif
 #ifdef CONFIG_PROFILING_PRELOAD_OVERHEAD
 	READ_CYCLE_COUNTER(cycles_preload);
 	cycles_preload -= cycles_preload_before;
@@ -643,9 +660,16 @@ void EventHandler::callOSCTrigger(Trigger *trigger, dword_t arg) {
 }
 
 bool EventHandler::tryTaskLock(EventTask *task) {
+#ifdef CONFIG_PAGE_COLORING
+	pDataMovementLock.lock();
+#endif
+
+	// Flush TLB to see newest page mapping
+	GenericMMU::sInstance->flushTLB();
+
 #ifdef CONFIG_DEBUG_LOCKING
 	DEBUG_STREAM(TAG,"Try locking EventTask: " << hex << task << " with OSC: " << task->trigger->pDestinationOSC);
-	DEBUG_STREAM(TAG,"Lock status: " << task->trigger->pDestinationOSC->getLock()->getStatus());
+//	DEBUG_STREAM(TAG,"Lock status: " << task->trigger->pDestinationOSC->getLock()->getStatus());
 #endif
 
 	// Try to lock the main OSC first
@@ -671,18 +695,20 @@ bool EventHandler::tryTaskLock(EventTask *task) {
 				dep = task->trigger->pDeps;
 				// Revert locks we already got
 				while (*dep != nullptr && revertCount != successCount) {
-					(*dep)->getLock()->unlock();
 					DEBUG_STREAM(TAG,"UNLOCK: " << hex << (*dep));
+					(*dep)->getLock()->unlock();
 					revertCount++;
 					dep++;
 				}
 
 				// Unlock main OSC
-				task->trigger->pDestinationOSC->getLock()->unlock();
 #ifdef CONFIG_DEBUG_LOCKING
 				DEBUG_STREAM(TAG,"UNLOCK: " << hex << task->trigger->pDestinationOSC);
 #endif
-
+				task->trigger->pDestinationOSC->getLock()->unlock();
+#ifdef CONFIG_PAGE_COLORING
+				pDataMovementLock.unlock();
+#endif
 				return false;
 			} else {
 #ifdef CONFIG_DEBUG_LOCKING
@@ -695,11 +721,19 @@ bool EventHandler::tryTaskLock(EventTask *task) {
 			successCount++;
 		}
 	}
-
+#ifdef CONFIG_PAGE_COLORING
+	pDataMovementLock.unlock();
+#endif
 	return success;
 }
 
 void EventHandler::unlockTask(EventTask *task) {
+#ifdef CONFIG_PAGE_COLORING
+	pDataMovementLock.lock();
+#endif
+
+	// Flush TLB to see newest page mapping
+	GenericMMU::sInstance->flushTLB();
 #ifdef CONFIG_DEBUG_LOCKING
 	DEBUG_STREAM(TAG,"Unlocking EventTask: " << hex << task);
 #endif
@@ -707,20 +741,23 @@ void EventHandler::unlockTask(EventTask *task) {
 	// Unlock dependencies first
 	OSC **dep = task->trigger->pDeps;
 	while ((*dep) != nullptr) {
-		(*dep)->getLock()->unlock();
-
 #ifdef CONFIG_DEBUG_LOCKING
 		DEBUG_STREAM(TAG,"UNLOCK: " << hex << (*dep));
+		DEBUG_STREAM(TAG,"LOCK OBJECT: " << hex << (*dep)->getLock() << endl);
 #endif
+		(*dep)->getLock()->unlock();
 
 		dep++;
 	}
 
-	// Unlock the main OSC also but last
-	task->trigger->pDestinationOSC->getLock()->unlock();
-
 #ifdef CONFIG_DEBUG_LOCKING
 	DEBUG_STREAM(TAG,"UNLOCK: " << hex << task->trigger->pDestinationOSC);
+#endif
+
+	// Unlock the main OSC also but last
+	task->trigger->pDestinationOSC->getLock()->unlock();
+#ifdef CONFIG_PAGE_COLORING
+	pDataMovementLock.unlock();
 #endif
 }
 

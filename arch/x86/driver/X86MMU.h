@@ -28,8 +28,15 @@ public:
 	void printInformation();
 
 	void activatePagetable(uintptr_t table);
+	uintptr_t getPhysicalAddressForVirtual(uintptr_t virtualPage);
+
+	virtual void flushTLB();
+protected:
+	virtual uintptr_t getDummyPageAddress() {return cDUMMY_PAGE;};
 
 private:
+	static constexpr uintptr_t cDUMMY_PAGE = 0x0;
+	static constexpr size_t cPAGESIZE = 4096;
 	static constexpr uint16_t cMSR_PAT = 0x277;
 	static constexpr uint32_t cCPUPID_PAT_SUPPORT = 0x1;
 	static constexpr uint32_t cCPUID_PAT_SUPPORT_BIT_MASK_EDX = (0x1 << 16);
@@ -37,10 +44,11 @@ private:
 
 
 	X86Pagetable::pteEntry_t *getPTEEntryFromAddress(uintptr_t address);
-	void flushTLB();
+
 	void flushTLBWithAddress(uintptr_t address);
 
 	virtual void mapVirtualPageToPhysicalAddress(uintptr_t virtualPage, uintptr_t physicalPage);
+	virtual size_t getPageSize() { return cPAGESIZE;};
 };
 
 #endif /* ARCH_X86_DRIVER_X86MMU_H_ */

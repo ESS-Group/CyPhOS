@@ -20,9 +20,6 @@
 #include <common/types.h>
 
 
-// FIXME move this to archs
-#define CACHE_WAY_SIZE 0x10000
-
 #define BEGIN_DECLARE_OSC(NAME,CLASS_NAME) \
 		extern void *__NS_OSC_##NAME##_OSC_start; \
 		extern void *__NS_OSC_##NAME##_OSC_text_end; \
@@ -62,7 +59,7 @@ class CLASS_NAME : public OSC, INHERITANCE { \
 //__NS_OSC_###NAME###_OSC_end describes the end of compiled code, but we want to cache the complete component
 #define BEGIN_OSC_IMPLEMENTATION(NAME,CLASS_NAME) \
 		namespace NS_OSC_##NAME##_OSC{ \
-		Spinlock NS_OSC_##NAME##_LOCK; \
+		SECTION_CRITICAL_DATA Spinlock NS_OSC_##NAME##_LOCK; \
 		void *CLASS_NAME::getOSCStart() { \
 			return &__NS_OSC_##NAME##_OSC_start; \
 		} \

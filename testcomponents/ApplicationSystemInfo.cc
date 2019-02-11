@@ -64,6 +64,9 @@
 extern uintptr_t __critical_osc_start;
 extern uintptr_t __critical_osc_end;
 
+extern uintptr_t __oscs__start;
+extern uintptr_t __oscs__end;
+
 extern uintptr_t __benchmark_results__start;
 extern uintptr_t __benchmark_results__end;
 extern volatile int32_t holding_pen;

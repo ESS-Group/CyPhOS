@@ -123,10 +123,10 @@ DEFINE_TRIGGER_FUNC(ApplicationCacheMissTest,verifyCache) {
 		}
 
 		if (cycles > ram_threshold) {
-			DEBUG_STREAM(TAG,"RAM hit at address: " << hex << i << " with cycles: " << dec << cycles);
+//			DEBUG_STREAM(TAG,"RAM hit at address: " << hex << i << " with cycles: " << dec << cycles);
 			ramCount++;
 		} else if (cycles > l3_threshold) {
-			DEBUG_STREAM(TAG,"L2 MISS at address: " << hex << i << " with cycles: " << dec << cycles);
+//			DEBUG_STREAM(TAG,"L2 MISS at address: " << hex << i << " with cycles: " << dec << cycles);
 			l3Count++;
 		} else if (cycles > l2_threshold) {
 //			DEBUG_STREAM(TAG,"L1 MISS at address: " << hex << i << " with cycles: " << dec << cycles);
@@ -145,6 +145,7 @@ DEFINE_TRIGGER_FUNC(ApplicationCacheMissTest,verifyCache) {
 	memoryAccess = ARMV7PerformanceCounter::pInstance.readEventCounter(0);
 #endif
 	SYNC_OUTPUT_STREAM_START(TAG << "Access count: " << dec << count << endl);
+	SYNC_OUTPUT_STREAM_CONTINUE("Run on CPU: " << dec << (uint32_t)getCPUID() << endl);
 	SYNC_OUTPUT_STREAM_CONTINUE("Average random access time: " << dec << (cycles_sum / count) << " min: " << min << " max: " << max << endl);
 	SYNC_OUTPUT_STREAM_CONTINUE("L3 misses (estimated): " << dec << ramCount << " rate: " << (ramCount*100 / count) << " %" << endl);
 	SYNC_OUTPUT_STREAM_CONTINUE("L2 misses (estimated): " << dec << l3Count << " rate: " << (l3Count*100 / count) << " %" << endl);
@@ -187,10 +188,10 @@ DEFINE_TRIGGER_FUNC(ApplicationCacheMissTest,verifyCache) {
 		}
 
 		if (cycles > ram_threshold) {
-			DEBUG_STREAM(TAG,"RAM hit at address: " << hex << i << " with cycles: " << dec << cycles);
+//			DEBUG_STREAM(TAG,"RAM hit at address: " << hex << i << " with cycles: " << dec << cycles);
 			ramCount++;
 		} else if (cycles > l3_threshold) {
-			DEBUG_STREAM(TAG,"L2 MISS at address: " << hex << i << " with cycles: " << dec << cycles);
+//			DEBUG_STREAM(TAG,"L2 MISS at address: " << hex << i << " with cycles: " << dec << cycles);
 			l3Count++;
 		} else if (cycles > l2_threshold) {
 //			DEBUG_STREAM(TAG,"L1 MISS at address: " << hex << i << " with cycles: " << dec << cycles);

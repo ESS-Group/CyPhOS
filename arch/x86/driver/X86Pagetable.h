@@ -40,7 +40,7 @@ public:
 		return (uintptr_t)pml4;
 	}
 
-	static X86Pagetable sInstances[NR_CPUS];
+	static X86Pagetable sInstances[1];
 
 	void printTablesStart();
 
@@ -57,9 +57,9 @@ private:
 	pdeEntry_t __attribute__ ((aligned (0x1000))) pde[pdeEntries];
 	pteEntry_t __attribute__ ((aligned (0x1000))) pte[pteEntries];
 
-	static constexpr uint32_t cPML4_FLAGS = 0x17;
-	static constexpr uint32_t cPDPE_FLAGS = 0x17;
-	static constexpr uint32_t cPDE_FLAGS = 0x17;
+	static constexpr uint32_t cPML4_FLAGS = 0x7;
+	static constexpr uint32_t cPDPE_FLAGS = 0x7;
+	static constexpr uint32_t cPDE_FLAGS = 0x7;
 	static constexpr uint32_t cPTE_FLAGS = 0x7;
 };
 

@@ -13,7 +13,9 @@
 
 #include <common/baremetal.h>
 
-X86Pagetable X86Pagetable::sInstances[NR_CPUS];
+__attribute__ ((section (".pagetable"))) X86Pagetable X86Pagetable::sInstances[1];
+
+extern uintptr_t ap_pagetable;
 
 void X86Pagetable::fillLinear() {
 	// Set first entry of PML4 list to start of pdpe list
@@ -51,6 +53,8 @@ void X86Pagetable::fillLinear() {
 		// Pagesize 4kb (4096 = 0x1000) increments
 		*tempPointer = (0x1000*i)|cPTE_FLAGS;
 	}
+
+	ap_pagetable = getBaseAddress();
 }
 
 void X86Pagetable::printTablesStart() {

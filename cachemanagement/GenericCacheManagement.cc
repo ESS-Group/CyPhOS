@@ -247,11 +247,17 @@ void GenericCacheManagement::preloadSingleOSC(OSC *osc, cycle_t *duration) {
 			while(1);
 		}
 
+		// Check if way already contains OSC
+		if (mCacheWays[lruCacheWay].oscID == osc) {
+			return;
+		}
+
 		preloadEnd = oscStart + (getCacheWaySize() - 4);
 		if (preloadEnd > oscEnd) {
 			preloadEnd = oscEnd;
 		}
 
+//		DEBUG_STREAM(TAG,"Preload OSC:" << hex << osc << " to way: " << dec << lruCacheWay);
 		// Load the data to the specific cache way
 		prefetchDataToWay(oscStart, preloadEnd, oscTextEnd <= preloadEnd ? oscTextEnd : preloadEnd, lruCacheWay, &duration_temp);
 

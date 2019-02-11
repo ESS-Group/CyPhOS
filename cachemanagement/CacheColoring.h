@@ -52,7 +52,7 @@ protected:
 	virtual size_t getCacheWaySize();
 
 private:
-	void distributeDataOverColor(uintptr_t start, uintptr_t end);
+	void distributeDataOverColor(uintptr_t start, uintptr_t end, cacheways_t color);
 };
 
 }

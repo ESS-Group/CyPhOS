@@ -21,7 +21,7 @@
 X86MMU X86MMU::mInstance;
 
 
-X86MMU::X86MMU() {
+X86MMU::X86MMU() : GenericMMU() {
 }
 
 void X86MMU::setRangeCacheable(uintptr_t from, uintptr_t to, bool cacheable) {
@@ -29,9 +29,10 @@ void X86MMU::setRangeCacheable(uintptr_t from, uintptr_t to, bool cacheable) {
 	DEBUG_STREAM(TAG,"setRangeCacheable: from: " << hex << from << " to: " << to << " cacheable: " << (uint16_t)cacheable);
 #endif
 	do {
-		X86Pagetable::pteEntry_t *entry = getPTEEntryFromAddress(from);
+		volatile X86Pagetable::pteEntry_t *entry = getPTEEntryFromAddress(from);
 
 		entry->pcd = !cacheable;
+		entry->pwt = !cacheable;
 
 //		flushTLBWithAddress(from);
 
@@ -54,7 +55,7 @@ uintptr_t X86MMU::virtualToPhysical(uintptr_t address) {
 
 
 X86Pagetable::pteEntry_t *X86MMU::getPTEEntryFromAddress(uintptr_t address) {
-	uint64_t *pml4 = (uint64_t*)X86Pagetable::sInstances[getCPUID()].getBaseAddress();
+	uint64_t *pml4 = (uint64_t*)X86Pagetable::sInstances[0].getBaseAddress();
 	// Manual pagetable walk
 
 	// Get index to PML4
@@ -123,10 +124,20 @@ void X86MMU::activatePagetable(uintptr_t table) {
 	DEBUG_STREAM(TAG,"Finished");
 }
 
+uintptr_t X86MMU::getPhysicalAddressForVirtual(uintptr_t virtualPage) {
+	return (getPTEEntryFromAddress(virtualPage)->physicalPageBaseAddress << 12);
+}
+
 void X86MMU::mapVirtualPageToPhysicalAddress(uintptr_t virtualPage, uintptr_t physicalPage) {
-	X86Pagetable::pteEntry_t *pte = getPTEEntryFromAddress(virtualPage);
+	__asm__ __volatile__ ("MFENCE;WBINVD;MFENCE;");
+	volatile X86Pagetable::pteEntry_t *pte = getPTEEntryFromAddress(virtualPage);
+	flushTLBWithAddress(virtualPage);
+#ifdef CONFIG_X86_DEBUG_MMU
+	DEBUG_STREAM(TAG,"Map virtual address: " << hex << virtualPage << " from: " << (pte->physicalPageBaseAddress << 12) << " to: " << physicalPage);
+#endif
 
 	pte->physicalPageBaseAddress = (physicalPage & 0xFFFFFFFFFF000) >> 12;
 
-	flushTLBWithAddress(physicalPage);
+	__asm__ __volatile__ ("MFENCE;WBINVD;MFENCE;");
+	flushTLBWithAddress(virtualPage);
 }
