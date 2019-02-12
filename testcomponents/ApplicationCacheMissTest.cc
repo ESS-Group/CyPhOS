@@ -88,6 +88,7 @@ DEFINE_TRIGGER_FUNC(ApplicationCacheMissTest,verifyCache) {
 	uint32_t ramCount = 0;
 	uint32_t l2Count = 0;
 	uint32_t l3Count = 0;
+	uint32_t l1Count = 0;
 
 	uint32_t cacheHitRate_before = 0, cacheReq_before = 0;
 	uint32_t cacheHitRate_after = 0, cacheReq_after = 0;
@@ -133,6 +134,7 @@ DEFINE_TRIGGER_FUNC(ApplicationCacheMissTest,verifyCache) {
 			l2Count++;
 		} else {
 //			DEBUG_STREAM(TAG,"L1 HIT at address: " << hex << i << " with cycles: " << dec << cycles);
+			l1Count++;
 		}
 
 
@@ -150,6 +152,7 @@ DEFINE_TRIGGER_FUNC(ApplicationCacheMissTest,verifyCache) {
 	SYNC_OUTPUT_STREAM_CONTINUE("L3 misses (estimated): " << dec << ramCount << " rate: " << (ramCount*100 / count) << " %" << endl);
 	SYNC_OUTPUT_STREAM_CONTINUE("L2 misses (estimated): " << dec << l3Count << " rate: " << (l3Count*100 / count) << " %" << endl);
 	SYNC_OUTPUT_STREAM_CONTINUE("L1 misses (estimated): " << dec << l2Count << " rate: " << (l2Count*100 / count) << " %" << endl);
+	SYNC_OUTPUT_STREAM_CONTINUE("L1 hits (estimated): " << dec << l1Count << " rate: " << (l1Count*100 / count) << " %" << endl);
 	SYNC_OUTPUT_STREAM_CONTINUE("Cache hit before: " << dec << cacheHitRate_before << " after " << cacheHitRate_after << endl);
 	SYNC_OUTPUT_STREAM_CONTINUE("Cache Requests before: " << dec << cacheReq_before << " after " << cacheReq_after << endl);
 	SYNC_OUTPUT_STREAM_CONTINUE("Cache requests: " << dec << cacheReq_after- cacheReq_before << " hits: " << cacheHitRate_after- cacheHitRate_before<< endl);
@@ -164,6 +167,7 @@ DEFINE_TRIGGER_FUNC(ApplicationCacheMissTest,verifyCache) {
 #endif
 //	DEBUG_STREAM(TAG,"L1 Cache cleaned from: " << hex << mTestData << " to: " << ((uintptr_t)mTestData + cTestSize));
 	count = 0;
+	l1Count = 0;
 	l2Count = 0;
 	l3Count = 0;
 	ramCount = 0;
@@ -198,6 +202,7 @@ DEFINE_TRIGGER_FUNC(ApplicationCacheMissTest,verifyCache) {
 			l2Count++;
 		} else {
 //			DEBUG_STREAM(TAG,"L1 HIT at address: " << hex << i << " with cycles: " << dec << cycles);
+			l1Count++;
 		}
 
 
@@ -213,6 +218,7 @@ DEFINE_TRIGGER_FUNC(ApplicationCacheMissTest,verifyCache) {
 	SYNC_OUTPUT_STREAM_CONTINUE("2nd_L3 misses (estimated): " << dec << ramCount << " rate: " << (ramCount*100 / count) << " %" << endl);
 	SYNC_OUTPUT_STREAM_CONTINUE("2nd_L2 misses (estimated): " << dec << l3Count << " rate: " << (l3Count*100 / count) << " %" << endl);
 	SYNC_OUTPUT_STREAM_CONTINUE("2nd_L1 misses (estimated): " << dec << l2Count << " rate: " << (l2Count*100 / count) << " %" << endl);
+	SYNC_OUTPUT_STREAM_CONTINUE("2nd_L1 hits (estimated): " << dec << l1Count << " rate: " << (l1Count*100 / count) << " %" << endl);
 	SYNC_OUTPUT_STREAM_CONTINUE("2nd_Cache hit before: " << dec << cacheHitRate_before << " after " << cacheHitRate_after << endl);
 	SYNC_OUTPUT_STREAM_CONTINUE("2nd_Cache Requests before: " << dec << cacheReq_before << " after " << cacheReq_after << endl);
 	SYNC_OUTPUT_STREAM_CONTINUE("2nd_Cache requests: " << dec << cacheReq_after- cacheReq_before << " hits: " << cacheHitRate_after- cacheHitRate_before<< endl);
