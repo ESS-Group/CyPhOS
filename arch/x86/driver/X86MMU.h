@@ -48,7 +48,7 @@ private:
 	X86Pagetable::pteEntry_t *getPTEEntryFromAddress(uintptr_t address);
 
 
-	virtual void mapVirtualPageToPhysicalAddress(uintptr_t virtualPage, uintptr_t physicalPage);
+	virtual void mapVirtualPageToPhysicalAddress(uintptr_t virtualPage, uintptr_t physicalPage, bool cacheable);
 	virtual size_t getPageSize() { return cPAGESIZE;};
 };
 

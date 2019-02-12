@@ -60,7 +60,7 @@ private:
 	static constexpr uint32_t cPML4_FLAGS = 0x7;
 	static constexpr uint32_t cPDPE_FLAGS = 0x7;
 	static constexpr uint32_t cPDE_FLAGS = 0x7;
-	static constexpr uint32_t cPTE_FLAGS = 0x7;
+	static constexpr uint32_t cPTE_FLAGS = 0x1F;
 };
 
 #endif /* ARCH_X86_DRIVER_X86PAGETABLE_H_ */

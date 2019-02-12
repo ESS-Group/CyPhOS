@@ -12,9 +12,9 @@ class GenericMMU {
 public:
 	GenericMMU();
 
-	virtual void mapVirtualPageToPhysicalAddress(uintptr_t virtualPage, uintptr_t physicalPage) = 0;
+	virtual void mapVirtualPageToPhysicalAddress(uintptr_t virtualPage, uintptr_t physicalPage, bool cacheable) = 0;
 
-	void moveVirtualPageToPhysicalAddress(uintptr_t virtualPage, uintptr_t physicalPage);
+	void moveVirtualPageToPhysicalAddress(uintptr_t virtualPage, uintptr_t physicalPage, bool cacheable);
 
 	virtual uintptr_t getPhysicalAddressForVirtual(uintptr_t virtualPage) = 0;
 

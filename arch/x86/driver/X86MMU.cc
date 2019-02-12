@@ -23,12 +23,11 @@ X86MMU X86MMU::mInstance;
 
 #define FLUSH_TLB_ADDRESS(tlbAddress) 	__asm__ __volatile__ ( \
 		"MFENCE\n" \
-		"WBINVD\n" \
 		"INVLPG (%0)"::"r"(tlbAddress):"memory")
 
+//	"WBINVD\n"
 #define FLUSH_TLB 	__asm__ __volatile__ ( \
 	"MFENCE\n" \
-	"WBINVD\n" \
 	"mov %%cr3, %%rax\n"  \
 	"mov %%rax, %%cr3\n":::"memory","rax")
 
@@ -37,18 +36,16 @@ X86MMU::X86MMU() : GenericMMU() {
 
 void X86MMU::setRangeCacheable(uintptr_t from, uintptr_t to, bool cacheable) {
 #ifdef CONFIG_X86_DEBUG_MMU
-	DEBUG_STREAM(TAG,"setRangeCacheable: from: " << hex << from << " to: " << to << " cacheable: " << (uint16_t)cacheable);
 #endif
+	DEBUG_STREAM(TAG,"setRangeCacheable: from: " << hex << from << " to: " << to << " cacheable: " << (uint16_t)cacheable);
 	do {
 		volatile X86Pagetable::pteEntry_t *entry = getPTEEntryFromAddress(from);
 
 		entry->pcd = !cacheable;
 		entry->pwt = !cacheable;
 
-//		flushTLBWithAddress(from);
-
 		// Increase from pointer by page size (4kB)
-		from += 0x1000;
+		from += cPAGESIZE;
 	} while (from < to);
 
 	// Finish by flushing the TLB
@@ -67,6 +64,7 @@ uintptr_t X86MMU::virtualToPhysical(uintptr_t address) {
 
 X86Pagetable::pteEntry_t *X86MMU::getPTEEntryFromAddress(uintptr_t address) {
 	uint64_t *pml4 = (uint64_t*)X86Pagetable::sInstances[0].getBaseAddress();
+
 	// Manual pagetable walk
 
 	// Get index to PML4
@@ -132,15 +130,17 @@ uintptr_t X86MMU::getPhysicalAddressForVirtual(uintptr_t virtualPage) {
 	return (getPTEEntryFromAddress(virtualPage)->physicalPageBaseAddress << 12);
 }
 
-void X86MMU::mapVirtualPageToPhysicalAddress(uintptr_t virtualPage, uintptr_t physicalPage) {
+void X86MMU::mapVirtualPageToPhysicalAddress(uintptr_t virtualPage, uintptr_t physicalPage, bool cacheable) {
 	volatile X86Pagetable::pteEntry_t *pte = getPTEEntryFromAddress(virtualPage);
-	FLUSH_TLB_ADDRESS(virtualPage);
+
+//	FLUSH_TLB_ADDRESS(virtualPage);
 #ifdef CONFIG_X86_DEBUG_MMU
 	DEBUG_STREAM(TAG,"Map virtual address: " << hex << virtualPage << " from: " << (pte->physicalPageBaseAddress << 12) << " to: " << physicalPage);
 #endif
 
 	pte->physicalPageBaseAddress = (physicalPage & 0xFFFFFFFFFF000) >> 12;
+	pte->pwt = !cacheable;
+	pte->pcd = !cacheable;
 
 	FLUSH_TLB_ADDRESS(virtualPage);
-//	FLUSH_TLB;
 }

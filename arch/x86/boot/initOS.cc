@@ -77,6 +77,9 @@ extern uintptr_t __oscs__start;
 extern uintptr_t __oscs__end;
 
 
+extern uintptr_t __pagetable_start;
+extern uintptr_t __pagetable_end;
+
 #ifdef CONFIG_BAREMETAL_APPLICATION
 extern void __attribute__ ((weak)) (*baremetal_entry_points[])();
 #endif
@@ -116,9 +119,10 @@ void printMemory(uintptr_t start, uint64_t length) {
 	/* Set certain regions to cacheable */
 	DEBUG_STREAM(TAG, "Set OSC region to cacheable");
 	X86MMU::mInstance.setRangeCacheable((uintptr_t) &__critical_osc_start, (uintptr_t) &__critical_osc_end, true);
-	X86MMU::mInstance.setRangeCacheable((uintptr_t) &__oscs__start, (uintptr_t) &__oscs__end, true);
+	X86MMU::mInstance.setRangeCacheable((uintptr_t) &__oscs__start, (uintptr_t) &__oscs__end, false);
 
 	X86MMU::mInstance.setRangeCacheable((uintptr_t) &__benchmark_results__start, (uintptr_t) &__benchmark_results__end, false);
+	X86MMU::mInstance.setRangeCacheable((uintptr_t) &__pagetable_start, (uintptr_t) &__pagetable_end, false);
 
 	DEBUG_STREAM(TAG, "Multiboot2 magic value: " << hex << (uint32_t)*&multiboot2_magic_value);
 	DEBUG_STREAM(TAG, "Multiboot2 information pointer: " << hex << (uint32_t)*&multiboot2_information_pointer);

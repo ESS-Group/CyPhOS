@@ -201,23 +201,33 @@ void GenericCacheManagement::lookupAndEvictOSC(OSC *osc, cycle_t *duration) {
 #endif
 			mCacheWays[cacheWay].inUse = false;
 			mCacheWays[cacheWay].lruCount = 0;
-			return;
+//			DEBUG_STREAM(TAG,
+//							"EVCache way " << dec << (dword_t) cacheWay << " permanently locked: " << mCacheWays[cacheWay].permanentLocked
+//									<< " with id: " << hex << mCacheWays[cacheWay].oscID << " used: " << dec <<(uint32_t)mCacheWays[cacheWay].inUse );
 		}
 	}
 }
 
 
 void GenericCacheManagement::printCacheWayInformation() {
-	LOG_OUTPUT_STREAM(TAG,"Cache evictions: " << dec << mEvictionCount << endl);
-	LOG_OUTPUT_STREAM_START(TAG, "Cache ways:" << dec << (uint32_t)mCacheWayCount << endl);
-	LOG_OUTPUT_STREAM_CONTINUE(TAG,"avg. missrate: " << dec << mLastMissRate << endl);
-	for (cacheways_t i = 0; i < mCacheWayCount; i++) {
-		LOG_OUTPUT_STREAM_CONTINUE(TAG,
-				"Cache way " << dec << (dword_t) i << " permanently locked: " << mCacheWays[i].permanentLocked
-						<< " with id: " << hex << mCacheWays[i].oscID << endl);
-	}
-	LOG_OUTPUT_STREAM_END;
+//	LOG_OUTPUT_STREAM(TAG,"Cache evictions: " << dec << mEvictionCount << endl);
+//	LOG_OUTPUT_STREAM_START(TAG, "Cache ways:" << dec << (uint32_t)mCacheWayCount << endl);
+//	LOG_OUTPUT_STREAM_CONTINUE(TAG,"avg. missrate: " << dec << mLastMissRate << endl);
+//	for (cacheways_t i = 0; i < mCacheWayCount; i++) {
+//		LOG_OUTPUT_STREAM_CONTINUE(TAG,
+//				"Cache way " << dec << (dword_t) i << " permanently locked: " << mCacheWays[i].permanentLocked
+//						<< " with id: " << hex << mCacheWays[i].oscID << endl);
+//	}
+//	LOG_OUTPUT_STREAM_END;
 
+	DEBUG_STREAM(TAG,"Cache evictions: " << dec << mEvictionCount << endl);
+	DEBUG_STREAM(TAG, "Cache ways:" << dec << (uint32_t)mCacheWayCount << endl);
+	DEBUG_STREAM(TAG,"avg. missrate: " << dec << mLastMissRate << endl);
+	for (cacheways_t i = 0; i < mCacheWayCount; i++) {
+		DEBUG_STREAM(TAG,
+				"Cache way " << dec << (dword_t) i << " permanently locked: " << mCacheWays[i].permanentLocked
+						<< " with id: " << hex << mCacheWays[i].oscID << " used: " << dec <<(uint32_t)mCacheWays[i].inUse );
+	};
 }
 
 uint64_t GenericCacheManagement::measureHitRate(uintptr_t start, uintptr_t end) {
@@ -252,6 +262,7 @@ void GenericCacheManagement::preloadSingleOSC(OSC *osc, cycle_t *duration) {
 		cacheways_t lruCacheWay = getLRUWay(osc,oscStart);
 		if(lruCacheWay == cMaxCacheWays) {
 			DEBUG_STREAM(TAG,"LRU did not find a free cache way, aborting execution!");
+			printCacheWayInformation();
 			while(1);
 		}
 

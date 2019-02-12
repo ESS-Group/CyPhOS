@@ -21,10 +21,8 @@ CacheColoring::CacheColoring() : GenericCacheManagement() {
 }
 
 void CacheColoring::prefetchDataToWay(uintptr_t start, uintptr_t end, uintptr_t textEnd, cacheways_t way, cycle_t* duration) {
-//	DEBUG_STREAM(TAG,"Move data from: " << hex << start << " to color: " << dec << way);
 	// Move all pages to corresponding color
 	size_t pageSize = GenericMMU::sInstance->getPageSize();
-//	DEBUG_STREAM(TAG,"Pages necessary:" << dec << (end-start) / pageSize);
 	uint32_t colorCount = getColorCount();
 	// Force (downwards) alignment of component
 	start = start & ~(0xFFF);
@@ -35,20 +33,19 @@ void CacheColoring::prefetchDataToWay(uintptr_t start, uintptr_t end, uintptr_t 
 	while (currentPage < end) {
 		// Calculates the correct position within the coloring space
 		uintptr_t colorAdditionOffset = (way * pageSize) + (colorOffset * pageSize * colorCount);
-//		DEBUG_STREAM(TAG,"Calculated offset: " << hex << colorAdditionOffset);
-		GenericMMU::sInstance->moveVirtualPageToPhysicalAddress(currentPage, mColorsStart + colorAdditionOffset);
+
+		GenericMMU::sInstance->moveVirtualPageToPhysicalAddress(currentPage, mColorsStart + colorAdditionOffset, true);
+
 		currentPage += pageSize;
 		colorOffset++;
 	}
-
-//	DEBUG_STREAM(TAG,"Finished");
 }
 
 void CacheColoring::evictCacheWay(cacheways_t way, cycle_t* duration) {
-//	DEBUG_STREAM(TAG,"Free color: " << dec << way);
 	// Return data from color to its original location
 
 	size_t pageSize = GenericMMU::sInstance->getPageSize();
+
 	// Force (downwards) alignment of component
 	uintptr_t start = (uintptr_t)mCacheWays[way].dataStart;
 	uintptr_t end = start + getColorSize();
@@ -57,7 +54,7 @@ void CacheColoring::evictCacheWay(cacheways_t way, cycle_t* duration) {
 
 	// Distribute all OSC pages to color pages
 	while (currentPage < end) {
-		GenericMMU::sInstance->moveVirtualPageToPhysicalAddress(currentPage, currentPage);
+		GenericMMU::sInstance->moveVirtualPageToPhysicalAddress(currentPage, currentPage, false);
 		currentPage += pageSize;
 	}
 }

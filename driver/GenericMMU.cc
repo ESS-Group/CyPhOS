@@ -12,11 +12,14 @@
 
 GenericMMU *GenericMMU::sInstance;
 
+//#define CONFIG_WIPE_OLD_PAGE
+
 GenericMMU::GenericMMU() {
 	sInstance = this;
 }
 
-void GenericMMU::moveVirtualPageToPhysicalAddress(uintptr_t virtualPage, uintptr_t physicalPage) {
+void GenericMMU::moveVirtualPageToPhysicalAddress(uintptr_t virtualPage, uintptr_t physicalPage, bool cacheable) {
+	cycle_t before, after = 0;
 #ifdef CONFIG_DEBUG_MMU
 	DEBUG_STREAM(TAG,"Move virtual page:" << hex << virtualPage << " to physical page: " << physicalPage);
 #endif
@@ -24,11 +27,16 @@ void GenericMMU::moveVirtualPageToPhysicalAddress(uintptr_t virtualPage, uintptr
 	// Get architectural dummy page address that is available as a temporary (virtual) page store
 	uintptr_t dummyPageAddress = getDummyPageAddress();
 
+#ifdef CONFIG_WIPE_OLD_PAGE
 	// Get physical address that is mapped to the current virtual address
 	uintptr_t originalPhysicalAddress = getPhysicalAddressForVirtual(virtualPage);
+#endif
 
+	READ_CYCLE_COUNTER(before);
 	// If physical page is not mapped to virtual address map a dummy page to it and use this one
 	bool dummyPage = getPhysicalAddressForVirtual(physicalPage) != physicalPage;
+	READ_CYCLE_COUNTER(after);
+//	DEBUG_STREAM(TAG,"Check dummy page: " << dec << (after-before));
 
 	// Memory copy variables
 	volatile uint64_t *source = (uint64_t*)virtualPage;
@@ -36,18 +44,19 @@ void GenericMMU::moveVirtualPageToPhysicalAddress(uintptr_t virtualPage, uintptr
 
 	// Check if physical destination is mapped to its logical counterpart
 	// Temporarily map physical location to a dummy location
+
 	if (dummyPage) {
-		mapVirtualPageToPhysicalAddress(dummyPageAddress, physicalPage);
+		mapVirtualPageToPhysicalAddress(dummyPageAddress, physicalPage, cacheable);
 		destination = (uint64_t*)dummyPageAddress;
+	} else {
+		mapVirtualPageToPhysicalAddress(physicalPage, physicalPage, cacheable);
 	}
 
 	// Copy page content
 	size_t pageSize = getPageSize();
+
 	for(uint32_t i = 0; i < pageSize; i += 8) {
 		*destination = *source;
-//		DEBUG_STREAM(TAG,"Source: " << hex << (uintptr_t)source << " dest: " << (uintptr_t)destination);
-//		DEBUG_STREAM(TAG,"Copy:" << hex << *source << " to:" << *destination);
-
 		destination++;
 		source++;
 	}
@@ -57,12 +66,13 @@ void GenericMMU::moveVirtualPageToPhysicalAddress(uintptr_t virtualPage, uintptr
 #endif
 
 	// Fix the MMU mapping for the requested virtual page
-	mapVirtualPageToPhysicalAddress(virtualPage, physicalPage);
+	mapVirtualPageToPhysicalAddress(virtualPage, physicalPage, cacheable);
 
 #ifdef CONFIG_DEBUG_MMU
 	DEBUG_STREAM(TAG,"Clean old physical page: " << hex << originalPhysicalAddress);
 #endif
 
+#ifdef CONFIG_WIPE_OLD_PAGE
 	// Map the virtual dummy page to the source physical page, to be able to clean it
 	// FIXME remove if system is stable. This is not necessary for a stable system, just
 	// to debug data coherence problems
@@ -83,7 +93,13 @@ void GenericMMU::moveVirtualPageToPhysicalAddress(uintptr_t virtualPage, uintptr
 #endif
 
 	// Return dummy page to its original mapping
-	mapVirtualPageToPhysicalAddress(0x0,0x0);
+	mapVirtualPageToPhysicalAddress(0x0,0x0, false);
+#else
+	// No need to wipe dummy page, just return it
+	if (dummyPage) {
+		mapVirtualPageToPhysicalAddress(0x0,0x0, false);
+	}
+#endif
 
 #ifdef CONFIG_DEBUG_MMU
 	DEBUG_STREAM(TAG,"All finished");
