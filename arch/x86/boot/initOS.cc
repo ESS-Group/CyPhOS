@@ -53,9 +53,6 @@
 
 #include <common/cpuid.h>
 
-// FIXME remove after OSC move test
-#include <testcomponents/ApplicationCacheMissTest.h>
-
 #define TAG "INIT"
 
 extern "C" {
@@ -78,9 +75,6 @@ extern uintptr_t __critical_osc_end;
 
 extern uintptr_t __oscs__start;
 extern uintptr_t __oscs__end;
-
-extern uintptr_t __cache_coloring_start;
-
 
 
 #ifdef CONFIG_BAREMETAL_APPLICATION
@@ -118,13 +112,6 @@ void printMemory(uintptr_t start, uint64_t length) {
 	X86Pagetable::sInstances[0].fillLinear();
 	X86MMU::mInstance.printInformation();
 	X86MMU::mInstance.activatePagetable(X86Pagetable::sInstances[0].getBaseAddress());
-//
-	// FIXME test OSC movement
-//	uintptr_t testOSC_start = (uintptr_t)&__oscs__start;
-//	uintptr_t testOSC_end = (uintptr_t)&__oscs__end;
-//	for (uintptr_t current = 0; testOSC_start + current < testOSC_end; current += 4096) {
-//		X86MMU::mInstance.moveVirtualPageToPhysicalAddress(testOSC_start + current, (uintptr_t)&__cache_coloring_start + current);
-//	}
 
 	/* Set certain regions to cacheable */
 	DEBUG_STREAM(TAG, "Set OSC region to cacheable");
