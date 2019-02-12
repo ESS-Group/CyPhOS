@@ -21,6 +21,7 @@ public:
 	virtual size_t getPageSize() = 0;
 
 	virtual void flushTLB() = 0;
+	virtual void flushTLBWithAddress(uintptr_t address) = 0;
 
 	static GenericMMU *sInstance;
 protected:

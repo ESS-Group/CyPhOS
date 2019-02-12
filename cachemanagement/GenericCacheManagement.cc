@@ -54,7 +54,9 @@ void GenericCacheManagement::preloadOSC(OSC* osc, EventHandling::Trigger *trigge
 
 void GenericCacheManagement::preloadCriticalData(void* start, void* end, void* textEnd) {
 	mLock.lock();
+#ifdef CONFIG_CACHE_DEBUG
 	DEBUG_STREAM(TAG, "Preloading Critical data from " << hex << start << " to " << end << " text segment ending at: " << textEnd);
+#endif
 	/* Determine OSC properties */
 	uintptr_t oscStart = (uintptr_t) start;
 	uintptr_t oscEnd = (uintptr_t) end;
@@ -67,16 +69,20 @@ void GenericCacheManagement::preloadCriticalData(void* start, void* end, void* t
 		if (preloadEnd > oscEnd) {
 			preloadEnd = oscEnd;
 		}
+#ifdef CONFIG_CACHE_DEBUG
 		DEBUG_STREAM(TAG, "Preloading Critical OSC: " << hex << " in cache way: " << dec << (dword_t)mCriticalWayPointer);
 		DEBUG_STREAM(TAG, "OSC start: " << hex << oscStart << " end: " << preloadEnd);
 		DEBUG_STREAM(TAG, "OSC size in byte: " << dec << ((uintptr_t)preloadEnd - (uintptr_t)oscStart));
+#endif
 
 		// Load the data to the specific cache way
 		cycle_t duration;
 		prefetchDataToWay((uintptr_t)oscStart, (uintptr_t)preloadEnd, (uintptr_t)textEnd <= preloadEnd ? (uintptr_t)textEnd : (uintptr_t)preloadEnd, mCriticalWayPointer, &duration);
+#ifdef CONFIG_CACHE_DEBUG
 		uint64_t misses = measureHitRate((uintptr_t)oscStart, (uintptr_t)preloadEnd);
 		DEBUG_STREAM(TAG, "Misses: " << dec << misses);
 		DEBUG_STREAM(TAG, "Miss rate: " << dec << (misses * 100)/(((uintptr_t)preloadEnd - (uintptr_t)oscStart)/CONFIG_CACHE_LINE_SIZE) << "%");
+#endif
 
 		mCacheWays[mCriticalWayPointer].oscID = 0;
 		mCacheWays[mCriticalWayPointer].permanentLocked = true;

@@ -31,6 +31,8 @@ public:
 	uintptr_t getPhysicalAddressForVirtual(uintptr_t virtualPage);
 
 	virtual void flushTLB();
+
+	virtual void flushTLBWithAddress(uintptr_t address);
 protected:
 	virtual uintptr_t getDummyPageAddress() {return cDUMMY_PAGE;};
 
@@ -45,7 +47,6 @@ private:
 
 	X86Pagetable::pteEntry_t *getPTEEntryFromAddress(uintptr_t address);
 
-	void flushTLBWithAddress(uintptr_t address);
 
 	virtual void mapVirtualPageToPhysicalAddress(uintptr_t virtualPage, uintptr_t physicalPage);
 	virtual size_t getPageSize() { return cPAGESIZE;};

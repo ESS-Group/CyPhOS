@@ -21,6 +21,17 @@
 X86MMU X86MMU::mInstance;
 
 
+#define FLUSH_TLB_ADDRESS(tlbAddress) 	__asm__ __volatile__ ( \
+		"MFENCE\n" \
+		"WBINVD\n" \
+		"INVLPG (%0)"::"r"(tlbAddress):"memory")
+
+#define FLUSH_TLB 	__asm__ __volatile__ ( \
+	"MFENCE\n" \
+	"WBINVD\n" \
+	"mov %%cr3, %%rax\n"  \
+	"mov %%rax, %%cr3\n":::"memory","rax")
+
 X86MMU::X86MMU() : GenericMMU() {
 }
 
@@ -84,19 +95,12 @@ X86Pagetable::pteEntry_t *X86MMU::getPTEEntryFromAddress(uintptr_t address) {
 
 
 void X86MMU::flushTLB() {
-	__asm__ __volatile__ (
-			"MFENCE\n"
-			"WBINVD\n"
-			"mov %%cr3, %%rax\n"
-			"mov %%rax, %%cr3\n":::"memory","rax");
+	FLUSH_TLB;
 }
 
 
 void X86MMU::flushTLBWithAddress(uintptr_t address) {
-	__asm__ __volatile__ (
-			"MFENCE\n"
-			"WBINVD\n"
-			"INVLPG (%0)"::"r"(address):"memory");
+	FLUSH_TLB_ADDRESS(address);
 }
 
 void X86MMU::printInformation() {
@@ -129,15 +133,14 @@ uintptr_t X86MMU::getPhysicalAddressForVirtual(uintptr_t virtualPage) {
 }
 
 void X86MMU::mapVirtualPageToPhysicalAddress(uintptr_t virtualPage, uintptr_t physicalPage) {
-	__asm__ __volatile__ ("MFENCE;WBINVD;MFENCE;");
 	volatile X86Pagetable::pteEntry_t *pte = getPTEEntryFromAddress(virtualPage);
-	flushTLBWithAddress(virtualPage);
+	FLUSH_TLB_ADDRESS(virtualPage);
 #ifdef CONFIG_X86_DEBUG_MMU
 	DEBUG_STREAM(TAG,"Map virtual address: " << hex << virtualPage << " from: " << (pte->physicalPageBaseAddress << 12) << " to: " << physicalPage);
 #endif
 
 	pte->physicalPageBaseAddress = (physicalPage & 0xFFFFFFFFFF000) >> 12;
 
-	__asm__ __volatile__ ("MFENCE;WBINVD;MFENCE;");
-	flushTLBWithAddress(virtualPage);
+	FLUSH_TLB_ADDRESS(virtualPage);
+//	FLUSH_TLB;
 }

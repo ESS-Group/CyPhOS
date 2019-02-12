@@ -664,9 +664,8 @@ bool EventHandler::tryTaskLock(EventTask *task) {
 	pDataMovementLock.lock();
 #endif
 
-	// Flush TLB to see newest page mapping
-	GenericMMU::sInstance->flushTLB();
 
+//	GenericMMU::sInstance->flushTLB();
 #ifdef CONFIG_DEBUG_LOCKING
 	DEBUG_STREAM(TAG,"Try locking EventTask: " << hex << task << " with OSC: " << task->trigger->pDestinationOSC);
 //	DEBUG_STREAM(TAG,"Lock status: " << task->trigger->pDestinationOSC->getLock()->getStatus());
@@ -677,6 +676,8 @@ bool EventHandler::tryTaskLock(EventTask *task) {
 		DEBUG_STREAM("Eventhandling","FAIL! OSC is null");
 	}
 
+	// Flush TLB to see newest page mapping
+	GenericMMU::sInstance->flushTLBWithAddress((uintptr_t)task->trigger->pDestinationOSC);
 	bool success = task->trigger->pDestinationOSC->getLock()->take_if_free();
 
 	if (success) {
@@ -688,6 +689,8 @@ bool EventHandler::tryTaskLock(EventTask *task) {
 		OSC **dep = task->trigger->pDeps;
 
 		while (*dep != nullptr) {
+			GenericMMU::sInstance->flushTLBWithAddress((uintptr_t)*dep);
+//			GenericMMU::sInstance->flushTLB();
 			success = (*dep)->getLock()->take_if_free();
 			if (!success) {
 				uint32_t revertCount = 0;
