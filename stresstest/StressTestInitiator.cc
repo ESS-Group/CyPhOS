@@ -15,7 +15,7 @@ BEGIN_OSC_IMPLEMENTATION(StressTestInitiator,StressTestInitiator)
 
 StressTestInitiator StressTestInitiator::mInstance;
 
-SECTION_CRITICAL_DATA OSC* StressTestInitiator::trigger_deps[] = {nullptr};
+SECTION_CRITICAL_DATA OSC* StressTestInitiator::trigger_deps[] = {CONSOLE_BUFFER_DEP, nullptr};
 
 SECTION_CRITICAL_DATA EventHandling::Trigger StressTestInitiator::trigger_Start = {(OSC*)&StressTestInitiator::mInstance,(void (OSC::*)(dword_t))&StressTestInitiator::func_Start,
 				(OSC**)&StressTestInitiator::trigger_deps, EventHandling::Trigger::cMIN_Priority + 2400};
