@@ -16,8 +16,8 @@ SECTIONS
 		. = ALIGN(0x1000);
 		global_pde = .;
 		. = . + 512 * 8 * 512;
-		__pagetable_end = .;
 	}
+	__pagetable_end = .;
 	
 	
 	INCLUDE arch/x86/ldscript-oscs.ld

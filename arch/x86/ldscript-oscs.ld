@@ -28,6 +28,10 @@ __oscs__end = .;
 	./build/cachemanagement/GenericCacheManagement.o(".text")
 	./build/arch/x86/cachemanagement/X86CacheManagement.o(".text")
 	./build/arch/x86/driver/CATManager.o(".text")
+	./build/arch/x86/driver/X86MMU.o(".text")
+	./build/driver/GenericMMU.o(".text")
+	./build/arch/x86/cachemanagement/X86CacheColoring.o(".text")
+	./build/cachemanagement/CacheColoring.o(".text")
 	
 	/* Arch specific interrupt handler */
 	./build/arch/x86/interrupts/interrupt_handler.o(".text")
@@ -48,6 +52,10 @@ __oscs__end = .;
 	./build/cachemanagement/GenericCacheManagement.o(".data")
 	./build/arch/x86/cachemanagement/X86CacheManagement.o(".data")
 	./build/arch/x86/driver/CATManager.o(".data")
+	./build/arch/x86/driver/X86MMU.o(".data")
+	./build/driver/GenericMMU.o(".data")
+	./build/arch/x86/cachemanagement/X86CacheColoring.o(".data")
+	./build/cachemanagement/CacheColoring.o(".data")
 
 	./build/arch/x86/interrupts/interrupt_handler.o(".data")
 
@@ -62,6 +70,10 @@ __oscs__end = .;
 	./build/cachemanagement/GenericCacheManagement.o(".bss")
 	./build/arch/x86/cachemanagement/X86CacheManagement.o(".bss")
 	./build/arch/x86/driver/CATManager.o(".bss")
+	./build/arch/x86/driver/X86MMU.o(".bss")
+	./build/driver/GenericMMU.o(".bss")
+	./build/arch/x86/cachemanagement/X86CacheColoring.o(".bss")
+	./build/cachemanagement/CacheColoring.o(".bss")
 
 
 	./build/arch/x86/core/SystemMode.o(".bss")
