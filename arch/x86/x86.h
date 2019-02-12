@@ -13,7 +13,7 @@
 
 #define CONFIG_UART_CONSOLE_DRIVER &OSC_PREFIX(InputOutput)::X86Uart
 
-#define BOOT_STACK_SIZE (0x20000)
+#define BOOT_STACK_SIZE (0x1000)
 
 /* Define the number of interrupts, used for the dispatcher to determine table lengths */
 #define NR_INTERRUPTS 256
@@ -44,7 +44,9 @@
 
 // DEBUG DEFINES
 #define CONFIG_DEBUG_ACPI
-//#define CONFIG_X86_DEBUG_MMU
+#ifdef CONFIG_DEBUG_MMU
+#define CONFIG_X86_DEBUG_MMU
+#endif
 #define CONFIG_X86_PRINT_MADT_ENTRIES
 #define CONFIG_X86_DEBUG_IOAPIC
 //#define CONFIG_X86_DEBUG_CAT

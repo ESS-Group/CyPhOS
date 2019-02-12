@@ -22,7 +22,7 @@ activateDispatching:
 // Calculate the offset
 	mul %rbx
 // Load the stack start address
-	mov $__boot_stack_start,%rbx
+	mov $__runtime_stack_start,%rbx
 // Subtract the actual offset value
 	sub %rax,%rbx
 // Set the stackpointer
