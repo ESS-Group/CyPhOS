@@ -170,6 +170,8 @@ cacheways_t GenericCacheManagement::getLRUWay(OSC* osc, uintptr_t dataStart) {
 	// Only return a cache way if a valid way is free
 	if(validWay) {
 		if(mCacheWays[maxCacheWay].oscID != nullptr) {
+			cycle_t duration;
+			evictCacheWay(maxCacheWay,&duration);
 			mEvictionCount++;
 		}
 		mCacheWays[maxCacheWay].lruCount = 0;
@@ -184,7 +186,7 @@ cacheways_t GenericCacheManagement::getLRUWay(OSC* osc, uintptr_t dataStart) {
 
 void GenericCacheManagement::lookupAndEvictOSC(OSC *osc, cycle_t *duration) {
 #ifdef CONFIG_CACHE_DEBUG
-			DEBUG_STREAM(TAG, "Evict OSC: " << hex << osc);
+		DEBUG_STREAM(TAG, "Evict OSC: " << hex << osc);
 #endif
 	for(cacheways_t cacheWay = 0; cacheWay < mCacheWayCount; cacheWay++) {
 		if (mCacheWays[cacheWay].oscID == osc) {
