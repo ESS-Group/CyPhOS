@@ -85,6 +85,9 @@ static EventHandling::Trigger* profiling_included_triggers[] = {
 	 * Saves SMI Count before profiling to compare
 	 */
 	static uint32_t sSMIDiscards[NR_CPUS];
+#if defined(CONFIG_PROFILING_EXECUTION) | defined(CONFIG_PROFILING_PRELOAD) | defined(CONFIG_PROFILING_PRELOAD_OVERHEAD)
+	static uint32_t sSMICounts[NR_CPUS];
+#endif
 #endif
 
 
@@ -774,6 +777,7 @@ void EventHandler::printCurrentEventTask() {
 	DEBUG_STREAM(TAG,"EventTask: " << hex << task);
 	DEBUG_STREAM(TAG,"EventTask stack: " << task->pStackpointer);
 	DEBUG_STREAM(TAG,"EventTask trigger: " << task->trigger);
+	DEBUG_STREAM(TAG,"EventTask trigger OSC: " << task->trigger->pDestinationOSC);
 	DEBUG_STREAM(TAG,"EventTask event: " << task->event);
 }
 

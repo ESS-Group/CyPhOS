@@ -67,7 +67,7 @@ do
 		LINKER_SCRIPT="${LINKER_SCRIPT}\n    __${NS}_bss_end = .;"
 	done
 	LINKER_SCRIPT="${LINKER_SCRIPT}\n    __${NS}_end = .;"
-	LINKER_SCRIPT="${LINKER_SCRIPT}\n    ASSERT( . - __${NS}_start <= ${ALIGNMENT} , \"OSC_${NS} >64k\");"
+#	LINKER_SCRIPT="${LINKER_SCRIPT}\n    ASSERT( . - __${NS}_start <= ${ALIGNMENT} , \"OSC_${NS} >64k\");"
 	LINKER_SCRIPT="${LINKER_SCRIPT}\n}"
 
 

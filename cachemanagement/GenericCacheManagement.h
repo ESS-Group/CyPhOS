@@ -25,8 +25,8 @@ protected:
 	struct CACHE_WAY_STATE_t {
 			bool permanentLocked;
 			uint8_t lruCount;
-			OSC *oscID;
 			uintptr_t dataStart;
+			uintptr_t dataEnd;
 			bool inUse;
 		};
 
@@ -127,6 +127,7 @@ protected:
 
 	virtual size_t getCacheWaySize() = 0;
 
+	virtual void preloadSingleOSC(OSC *osc, cycle_t *duration);
 private:
 	uint64_t mLastMissRate = 0;
 
@@ -134,7 +135,6 @@ private:
 
 	void lookupAndEvictOSC(OSC *osc, cycle_t *duration);
 
-	void preloadSingleOSC(OSC *osc, cycle_t *duration);
 };
 
 } /* namespace CacheManagement */

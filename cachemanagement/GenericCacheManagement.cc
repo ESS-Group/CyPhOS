@@ -84,7 +84,6 @@ void GenericCacheManagement::preloadCriticalData(void* start, void* end, void* t
 		DEBUG_STREAM(TAG, "Miss rate: " << dec << (misses * 100)/(((uintptr_t)preloadEnd - (uintptr_t)oscStart)/CONFIG_CACHE_LINE_SIZE) << "%");
 #endif
 
-		mCacheWays[mCriticalWayPointer].oscID = 0;
 		mCacheWays[mCriticalWayPointer].permanentLocked = true;
 
 		mCriticalWayPointer++;
@@ -136,7 +135,7 @@ cacheways_t GenericCacheManagement::getLRUWay(OSC* osc, uintptr_t dataStart) {
 	// Check if OSC is already in a cache way
 	for (cacheways_t way = 0; way < mCacheWayCount; way++) {
 		/* Check if OSC is already in way */
-		if (mCacheWays[way].oscID == osc && mCacheWays[way].dataStart == dataStart) {
+		if (mCacheWays[way].dataStart == dataStart) {
 			/* Reset LRU count because it is used */
 			mCacheWays[way].lruCount = 0;
 			return way;
@@ -149,7 +148,7 @@ cacheways_t GenericCacheManagement::getLRUWay(OSC* osc, uintptr_t dataStart) {
 		/* Only check if it is not a permanently locked way */
 		// Check if the cache way holds a component Heap, which is not used anymore
 		if ((!mCacheWays[way].permanentLocked) && (!mCacheWays[way].inUse)) {
-			if (mCacheWays[way].oscID == nullptr) {
+			if (mCacheWays[way].dataStart == 0) {
 				// Always try to use free ways first
 				maxCacheWay = way;
 				validWay = true;
@@ -169,13 +168,12 @@ cacheways_t GenericCacheManagement::getLRUWay(OSC* osc, uintptr_t dataStart) {
 
 	// Only return a cache way if a valid way is free
 	if(validWay) {
-		if(mCacheWays[maxCacheWay].oscID != nullptr) {
+		if(mCacheWays[maxCacheWay].dataStart != 0) {
 			cycle_t duration;
 			evictCacheWay(maxCacheWay,&duration);
 			mEvictionCount++;
 		}
 		mCacheWays[maxCacheWay].lruCount = 0;
-		mCacheWays[maxCacheWay].oscID = nullptr;
 		mCacheWays[maxCacheWay].dataStart = 0;
 		return maxCacheWay;
 	} else {
@@ -188,15 +186,19 @@ void GenericCacheManagement::lookupAndEvictOSC(OSC *osc, cycle_t *duration) {
 #ifdef CONFIG_CACHE_DEBUG
 		DEBUG_STREAM(TAG, "Evict OSC: " << hex << osc);
 #endif
+	uintptr_t start = (uintptr_t)osc->getOSCStart();
+	uintptr_t end= (uintptr_t)osc->getOSCEnd();
+
 	for(cacheways_t cacheWay = 0; cacheWay < mCacheWayCount; cacheWay++) {
-		if (mCacheWays[cacheWay].oscID == osc) {
+		// Check if cache way contains some of OSCs data
+		if (mCacheWays[cacheWay].dataStart >= start && mCacheWays[cacheWay].dataStart < end) {
 #ifdef CONFIG_CACHE_DEBUG
 			DEBUG_STREAM(TAG, "Free cache way: " << dec << (uint16_t) cacheWay << " from OSC: " << hex << osc);
 #endif
 
 #ifdef	CONFIG_CACHE_CONTROL_EVICT_AFTER_USE
 			evictCacheWay(cacheWay,duration);
-			mCacheWays[cacheWay].oscID = nullptr;
+			mCacheWays[cacheWay].dataStart = 0;
 			mEvictionCount++;
 #endif
 			mCacheWays[cacheWay].inUse = false;
@@ -226,7 +228,7 @@ void GenericCacheManagement::printCacheWayInformation() {
 	for (cacheways_t i = 0; i < mCacheWayCount; i++) {
 		DEBUG_STREAM(TAG,
 				"Cache way " << dec << (dword_t) i << " permanently locked: " << mCacheWays[i].permanentLocked
-						<< " with id: " << hex << mCacheWays[i].oscID << " used: " << dec <<(uint32_t)mCacheWays[i].inUse );
+						<< " with id: " << hex << " used: " << dec <<(uint32_t)mCacheWays[i].inUse );
 	};
 }
 
@@ -248,15 +250,18 @@ void GenericCacheManagement::preloadSingleOSC(OSC *osc, cycle_t *duration) {
 #ifdef CONFIG_PROFILING_PRELOAD
 	cycle_t duration_sum = 0;
 #endif
+	size_t cacheWaySize = getCacheWaySize();
 	cycle_t duration_temp = 0;
 
 	/* Determine OSC properties */
 	uintptr_t oscStart = (uintptr_t)osc->getOSCStart();
 	uintptr_t oscEnd = (uintptr_t)osc->getOSCEnd();
 	uintptr_t oscTextEnd = (uintptr_t)osc->getOSCTextEnd();
-
 	uintptr_t preloadEnd;
 
+
+	// Will be set if part is already in cache (to support partial eviction)
+	bool skipPreload = false;
 	while (oscStart < oscEnd) {
 		/* First get the cache way which is the least recently used one */
 		cacheways_t lruCacheWay = getLRUWay(osc,oscStart);
@@ -267,21 +272,24 @@ void GenericCacheManagement::preloadSingleOSC(OSC *osc, cycle_t *duration) {
 		}
 
 		// Check if way already contains OSC
-		if (mCacheWays[lruCacheWay].oscID == osc) {
-			return;
+		if (mCacheWays[lruCacheWay].dataStart == oscStart) {
+			skipPreload = true;
 		}
 
-		preloadEnd = oscStart + (getCacheWaySize() - 4);
+		preloadEnd = oscStart + (cacheWaySize - 4);
 		if (preloadEnd > oscEnd) {
 			preloadEnd = oscEnd;
 		}
 
 //		DEBUG_STREAM(TAG,"Preload OSC:" << hex << osc << " to way: " << dec << lruCacheWay);
 		// Load the data to the specific cache way
-		prefetchDataToWay(oscStart, preloadEnd, oscTextEnd <= preloadEnd ? oscTextEnd : preloadEnd, lruCacheWay, &duration_temp);
+		if (!skipPreload) {
+			prefetchDataToWay(oscStart, preloadEnd, oscTextEnd <= preloadEnd ? oscTextEnd : preloadEnd, lruCacheWay, &duration_temp);
+			skipPreload = false;
+		}
 
-		mCacheWays[lruCacheWay].oscID = osc;
 		mCacheWays[lruCacheWay].dataStart = oscStart;
+		mCacheWays[lruCacheWay].dataEnd = preloadEnd;
 		mCacheWays[lruCacheWay].inUse = true;
 
 		oscStart = preloadEnd + 4;

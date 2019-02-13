@@ -53,8 +53,8 @@ void X86CacheManagement::prefetchDataToWay(uintptr_t start, uintptr_t end, uintp
 }
 
 void X86CacheManagement::evictCacheWay(cacheways_t way, cycle_t *duration) {
-	uintptr_t oscStart = (uintptr_t)mCacheWays[way].oscID->getOSCStart();
-	uintptr_t oscEnd = (uintptr_t)mCacheWays[way].oscID->getOSCEnd();
+	uintptr_t oscStart = (uintptr_t)mCacheWays[way].dataStart;
+	uintptr_t oscEnd = (uintptr_t)mCacheWays[way].dataEnd;
 #ifdef CONFIG_PROFILING_WRITEBACK
 	cycle_t before = 0, after = 0;
 	RESET_READ_CYCLE_COUNTER(before);

@@ -29,6 +29,9 @@ void CacheColoring::prefetchDataToWay(uintptr_t start, uintptr_t end, uintptr_t 
 	uintptr_t currentPage = start;
 	uintptr_t colorOffset = 0;
 
+#ifdef CONFIG_CACHE_DEBUG
+	DEBUG_STREAM(TAG,"Preload from: " << hex << start << " to:" << end << " in way: " << dec << (uint32_t)way);
+#endif
 	// Distribute all OSC pages to color pages
 	while (currentPage < end) {
 		// Calculates the correct position within the coloring space
@@ -42,21 +45,28 @@ void CacheColoring::prefetchDataToWay(uintptr_t start, uintptr_t end, uintptr_t 
 }
 
 void CacheColoring::evictCacheWay(cacheways_t way, cycle_t* duration) {
+
 	// Return data from color to its original location
 
 	size_t pageSize = GenericMMU::sInstance->getPageSize();
 
 	// Force (downwards) alignment of component
 	uintptr_t start = (uintptr_t)mCacheWays[way].dataStart;
-	uintptr_t end = start + getColorSize();
+	uintptr_t end = (uintptr_t)mCacheWays[way].dataEnd;
 
 	uintptr_t currentPage = start;
 
+#ifdef CONFIG_CACHE_DEBUG
+	DEBUG_STREAM(TAG,"Evict way: " << dec << (uint32_t)way << " with OSC: " << hex << " from: " << hex << start << " to: " << end);
+#endif
 	// Distribute all OSC pages to color pages
 	while (currentPage < end) {
 		GenericMMU::sInstance->moveVirtualPageToPhysicalAddress(currentPage, currentPage, false);
 		currentPage += pageSize;
 	}
+#ifdef CONFIG_CACHE_DEBUG
+	DEBUG_STREAM(TAG,"Finished evict");
+#endif
 }
 
 void CacheColoring::evictMemoryRange(uintptr_t start, uint64_t size) {
@@ -74,9 +84,24 @@ size_t CacheColoring::getCacheWaySize() {
 	return getColorSize();
 }
 
-void CacheColoring::distributeDataOverColor(uintptr_t start, uintptr_t end, cacheways_t color) {
+#ifndef CONFIG_CACHE_CONTROL_EVICT_AFTER_USE
+void CacheColoring::preloadSingleOSC(OSC* osc, cycle_t* duration) {
+	// This should only be necessary if no evict after use is enabled because the TLB of one processor
+	// could be incoherent to another ones.
+	// Flush all TLB entries of OSC to ensure data coherence
+	GenericMMU::sInstance->flushTLBWithAddress((uintptr_t)osc);
 
+	uintptr_t oscPAGE = (uintptr_t)osc->getOSCStart();
+	uintptr_t oscEnd = (uintptr_t)osc->getOSCEnd();
+
+	size_t pageSize = GenericMMU::sInstance->getPageSize();
+	while (oscPAGE < oscEnd) {
+		GenericMMU::sInstance->flushTLBWithAddress(oscPAGE);
+		oscPAGE += pageSize;
+	}
+	GenericCacheManagement::preloadSingleOSC(osc,duration);
 }
+#endif
 
 }
 

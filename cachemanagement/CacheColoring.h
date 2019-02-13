@@ -50,9 +50,10 @@ protected:
 	virtual void printCacheWayInformation();
 
 	virtual size_t getCacheWaySize();
-
+#ifndef CONFIG_CACHE_CONTROL_EVICT_AFTER_USE
+	virtual void preloadSingleOSC(OSC *osc, cycle_t *duration);
+#endif
 private:
-	void distributeDataOverColor(uintptr_t start, uintptr_t end, cacheways_t color);
 };
 
 }

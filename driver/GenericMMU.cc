@@ -12,7 +12,7 @@
 
 GenericMMU *GenericMMU::sInstance;
 
-//#define CONFIG_WIPE_OLD_PAGE
+#define CONFIG_WIPE_OLD_PAGE
 
 GenericMMU::GenericMMU() {
 	sInstance = this;
@@ -64,20 +64,20 @@ void GenericMMU::moveVirtualPageToPhysicalAddress(uintptr_t virtualPage, uintptr
 	// Fix the MMU mapping for the requested virtual page
 	mapVirtualPageToPhysicalAddress(virtualPage, physicalPage, cacheable);
 
-#ifdef CONFIG_DEBUG_MMU
-	DEBUG_STREAM(TAG,"Clean old physical page: " << hex << originalPhysicalAddress);
-#endif
+
 
 #ifdef CONFIG_WIPE_OLD_PAGE
 	// Map the virtual dummy page to the source physical page, to be able to clean it
 	// FIXME remove if system is stable. This is not necessary for a stable system, just
 	// to debug data coherence problems
-	mapVirtualPageToPhysicalAddress(dummyPageAddress, originalPhysicalAddress);
+	mapVirtualPageToPhysicalAddress(dummyPageAddress, originalPhysicalAddress, false);
 	destination = (uint64_t*)dummyPageAddress;
 
+
 #ifdef CONFIG_DEBUG_MMU
-	DEBUG_STREAM(TAG,"Start cleaning");
+	DEBUG_STREAM(TAG,"Clean old physical page: " << hex << originalPhysicalAddress);
 #endif
+
 	for(uint32_t i = 0; i < pageSize; i += 8) {
 //		DEBUG_STREAM(TAG,"Cleaning address: " << (uintptr_t)destination);
 		*destination = 0;
