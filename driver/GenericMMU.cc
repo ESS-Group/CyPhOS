@@ -19,7 +19,6 @@ GenericMMU::GenericMMU() {
 }
 
 void GenericMMU::moveVirtualPageToPhysicalAddress(uintptr_t virtualPage, uintptr_t physicalPage, bool cacheable) {
-	cycle_t before, after = 0;
 #ifdef CONFIG_DEBUG_MMU
 	DEBUG_STREAM(TAG,"Move virtual page:" << hex << virtualPage << " to physical page: " << physicalPage);
 #endif
@@ -32,11 +31,8 @@ void GenericMMU::moveVirtualPageToPhysicalAddress(uintptr_t virtualPage, uintptr
 	uintptr_t originalPhysicalAddress = getPhysicalAddressForVirtual(virtualPage);
 #endif
 
-	READ_CYCLE_COUNTER(before);
 	// If physical page is not mapped to virtual address map a dummy page to it and use this one
 	bool dummyPage = getPhysicalAddressForVirtual(physicalPage) != physicalPage;
-	READ_CYCLE_COUNTER(after);
-//	DEBUG_STREAM(TAG,"Check dummy page: " << dec << (after-before));
 
 	// Memory copy variables
 	volatile uint64_t *source = (uint64_t*)virtualPage;
