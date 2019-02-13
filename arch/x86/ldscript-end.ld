@@ -52,7 +52,7 @@
 		__benchmark_results__end = .;
 	}
 	
-	. = ALIGN(0x10000);
+	. = ALIGN(0x80000);
 	__cache_coloring_start = .;
 	
 	/* 
