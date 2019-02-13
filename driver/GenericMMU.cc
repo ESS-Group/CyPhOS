@@ -27,9 +27,10 @@ void GenericMMU::moveVirtualPageToPhysicalAddress(uintptr_t virtualPage, uintptr
 	uintptr_t dummyPageAddress = getDummyPageAddress();
 
 #ifdef CONFIG_WIPE_OLD_PAGE
+#endif
 	// Get physical address that is mapped to the current virtual address
 	uintptr_t originalPhysicalAddress = getPhysicalAddressForVirtual(virtualPage);
-#endif
+	mapVirtualPageToPhysicalAddress(virtualPage, originalPhysicalAddress, !cacheable);
 
 	// If physical page is not mapped to virtual address map a dummy page to it and use this one
 	bool dummyPage = getPhysicalAddressForVirtual(physicalPage) != physicalPage;
