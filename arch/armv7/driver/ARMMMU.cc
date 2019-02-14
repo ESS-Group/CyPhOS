@@ -31,7 +31,7 @@ extern uintptr_t __pagetable_start;
  */
 memory_map_entry_t ARMMMU::memoryMap[] = ARM_MEMORY_MAP;
 
-ARMMMU::ARMMMU() {
+ARMMMU::ARMMMU() : GenericMMU() {
 	mPagetable = (dword_t*) &__pagetable_start;
 }
 
@@ -89,6 +89,17 @@ void ARMMMU::activateMMU() {
 }
 
 void ARMMMU::flushTLB() {
+	__asm__ __volatile__ (
+			"ISB\n"
+			"DSB\n"
+			"MOV     r0, #0\n"
+			"MCR p15, 0, r0, c8, c3, 0\n"
+			"DSB\n"
+			"ISB": : : "memory");
+}
+
+void ARMMMU::flushTLBWithAddress(uintptr_t address) {
+	// FIXME
 	__asm__ __volatile__ (
 			"ISB\n"
 			"DSB\n"
@@ -298,4 +309,13 @@ dword_t ARMMMU::readACTLR() {
 
 void ARMMMU::writeACTLR(dword_t sctrl) {
 	asm("MCR p15, 0, %0, c1, c0, 1;" : : "r"(sctrl));
+}
+
+uintptr_t ARMMMU::getPhysicalAddressForVirtual(uintptr_t virtualAddress) {
+	// FIXME
+	return virtualAddress;
+}
+
+void ARMMMU::mapVirtualPageToPhysicalAddress(uintptr_t virtualPage, uintptr_t physicalPage, bool cacheable) {
+	// FIXME
 }

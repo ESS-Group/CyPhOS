@@ -25,9 +25,11 @@
 
 #include <common/types.h>
 
+#include <driver/GenericMMU.h>
+
 #include <arch/armv7/driver/memory_map.h>
 
-class ARMMMU {
+class ARMMMU : public GenericMMU {
 public:
 	ARMMMU();
 	void activateMMU();
@@ -44,6 +46,7 @@ public:
 	void resetAllAccessFlags();
 	void setPagetableEntry(uintptr_t address, dword_t entry);
 	void flushTLB();
+	void flushTLBWithAddress(uintptr_t address);
 	void flushTLBWithoutBroadcast();
 
 	void dumpPageTable();
@@ -51,7 +54,8 @@ public:
 	/** Static instance variable */
 	static ARMMMU pInstance;
 private:
-
+	size_t cPAGE_SIZE = 1024 * 1024 * 2;
+	uintptr_t cDUMMY_PAGE_ADDRESS = 0x0;
 	dword_t *mPagetable;
 
 	static memory_map_entry_t memoryMap[];
@@ -65,6 +69,13 @@ private:
 
 	dword_t readACTLR();
 	void writeACTLR(dword_t sctrl);
+
+protected:
+	size_t getPageSize() {return cPAGE_SIZE;}
+	uintptr_t getDummyPageAddress() {return cDUMMY_PAGE_ADDRESS;}
+
+	uintptr_t getPhysicalAddressForVirtual(uintptr_t virtualAddress);
+	void mapVirtualPageToPhysicalAddress(uintptr_t virtualPage, uintptr_t physicalPage, bool cacheable);
 };
 
 #endif /* ARMMMU_H_ */
