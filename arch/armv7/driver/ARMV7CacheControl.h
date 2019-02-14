@@ -176,8 +176,9 @@ public:
 	static ARMV7CacheControl pInstance;
 private:
 	static constexpr uint8_t cMaxLockdownRegisters = 8;
-
 	static constexpr cycle_t cRamAccessTimeThreshold = 100;
+
+	static constexpr uint32_t cCACHE_WAY_SIZE = 64 * 1024;
 	/**
 	 * Enum values for synchronous cache operations.
 	 */
@@ -197,7 +198,10 @@ protected:
 	void prefetchDataToWay(uintptr_t start, uintptr_t end, uintptr_t textEnd, cacheways_t way, cycle_t *duration);
 	void evictCacheWay(cacheways_t way, cycle_t *duration);
 	void evictMemoryRange(uintptr_t start, uint64_t size);
-	cycle_t getRAMAccessTimeThreshold() { return cRamAccessTimeThreshold; }
+
+	size_t getCacheWaySize() {return cCACHE_WAY_SIZE;}
+
+	cycle_t getRAMAccessTimeThreshold() {return cRamAccessTimeThreshold;}
 };
 
 } /* namespace CacheManagement */
