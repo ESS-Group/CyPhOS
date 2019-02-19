@@ -20,13 +20,6 @@ inline void flushTLBBroadcast() {
 	ARMMMU::pInstance.flushTLB();
 }
 
-inline void enableAccessFlag() {
-	ARMMMU::pInstance.enableAccessFlag();
-}
-
-inline void disableAccessFlag() {
-	ARMMMU::pInstance.disableAccessFlag();
-}
 
 }
 

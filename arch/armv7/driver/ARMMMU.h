@@ -27,6 +27,8 @@
 
 #include <driver/GenericMMU.h>
 
+#include "ARMv7PageTable.h"
+
 #include <arch/armv7/driver/memory_map.h>
 
 class ARMMMU : public GenericMMU {
@@ -34,17 +36,12 @@ public:
 	ARMMMU();
 	void activateMMU();
 	void deactivateMMU();
-	void populatePageTable();
 
 	void setSectionCacheable(uintptr_t section, bool cacheable);
 	void setRangeCacheable(uintptr_t from, uintptr_t to, bool cacheable);
-	void setRangeType(uintptr_t from, uintptr_t to, memory_section_type type);
 
-	void enableAccessFlag();
-	void disableAccessFlag();
 	void enableMaintenanceBroadcasting();
 	void resetAllAccessFlags();
-	void setPagetableEntry(uintptr_t address, dword_t entry);
 	void flushTLB();
 	void flushTLBWithAddress(uintptr_t address);
 	void flushTLBWithoutBroadcast();
@@ -54,13 +51,11 @@ public:
 	/** Static instance variable */
 	static ARMMMU pInstance;
 private:
-	size_t cPAGE_SIZE = 1024 * 1024 * 2;
+	size_t cPAGE_SIZE = 4096;
 	uintptr_t cDUMMY_PAGE_ADDRESS = 0x0;
 	dword_t *mPagetable;
 
 	static memory_map_entry_t memoryMap[];
-
-	unsigned int getIndexFromAddress(uintptr_t address);
 
 	dword_t readTTBCR();
 	dword_t readTTBR0();
@@ -69,6 +64,8 @@ private:
 
 	dword_t readACTLR();
 	void writeACTLR(dword_t sctrl);
+
+	ARMv7PageTable::secondLevelDescriptor_t *getSecondLevelPageTableEntryFromAddress(uintptr_t address);
 
 protected:
 	size_t getPageSize() {return cPAGE_SIZE;}

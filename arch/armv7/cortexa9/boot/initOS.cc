@@ -34,6 +34,7 @@
 
 /* Include A9 MMU init code */
 #include <driver/ARMMMU.h>
+#include <driver/ARMv7PageTable.h>
 
 /* Include startup message */
 #include <common/greeting.h>
@@ -121,7 +122,7 @@ inline void setHoldingPen(int32_t val) {
 
 	/* Populate the pagetable entries */
 	DEBUG_STREAM(TAG,"Initialize the pagetable");
-	ARMMMU::pInstance.populatePageTable();
+	ARMv7PageTable::sInstance.fillLinear();
 
 	/* Set certain regions to cacheable */
 	DEBUG_STREAM(TAG,"Set OSC region to cacheable");
@@ -133,8 +134,6 @@ inline void setHoldingPen(int32_t val) {
 	DEBUG_STREAM(TAG,"Setting VBAR (vector base address register) to: " << hex << &first_jump_table_start);
 	setVBAR((dword_t) &first_jump_table_start);
 	DEBUG_STREAM(TAG,"VBAR now: " << hex << readVBAR());
-
-	ARMMMU::pInstance.resetAllAccessFlags();
 
 	/* Now init the Memory Management*/
 //	DynamicMemory::MemoryAllocator::mInstance.init();

@@ -20,8 +20,6 @@
 
 #include "StackPool.h"
 
-#include <common/TLBAbstraction.h>
-
 #include <common/SyncOutput.h>
 
 #ifdef CONFIG_SCHEDULER_MULTI_FIFO

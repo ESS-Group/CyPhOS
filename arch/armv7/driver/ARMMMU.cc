@@ -35,26 +35,6 @@ ARMMMU::ARMMMU() : GenericMMU() {
 	mPagetable = (dword_t*) &__pagetable_start;
 }
 
-void ARMMMU::populatePageTable() {
-	/* Iterate over the memory map */
-	memory_map_entry_t *entry = memoryMap;
-	DEBUG_STREAM(TAG,"Memorymap address: " << hex << entry);
-	while (entry != nullptr && !(entry->start == 0x0 && entry->length == 0x0)) {
-		DEBUG_STREAM(TAG,"Mem_map start:" << hex << entry->start << " length: " << entry->length << " type: " << dec << (unsigned int)entry->type);
-		setRangeType(entry->start, entry->start + entry->length - 4, entry->type);
-		entry++;
-	}
-	DSB;
-}
-
-unsigned int ARMMMU::getIndexFromAddress(uintptr_t address) {
-	// Align address to 1MB bounds (down)
-	address = address - (address % 0x100000);
-	// calculate index in pagetable
-	unsigned int index = address / 0x100000;
-
-	return index;
-}
 
 
 void ARMMMU::dumpPageTable() {
@@ -64,12 +44,28 @@ void ARMMMU::dumpPageTable() {
 }
 
 void ARMMMU::activateMMU() {
-	for(int i = 0; i < 10;i++) {
-		DEBUG_STREAM(TAG,"Pagetable " << dec << i << " :" << hex <<mPagetable[i] );
+	uintptr_t pageTable = (uintptr_t)ARMv7PageTable::sInstance.getFirstLevelBaseAddress();
+	DEBUG_STREAM(TAG,"TTBCR: " << hex << readTTBCR());
+	DEBUG_STREAM(TAG,"TTBR0: " << hex << readTTBR0() );DEBUG_STREAM(TAG,"SCTRL: " << hex << readSYSCTRL() );
+	DEBUG_STREAM(TAG,"Activating MMU on core: " << hex << (unsigned int)getCPUID() << " with pagetable at: " << hex << pageTable);
+//	// Do sanity check
+//	for (uintptr_t i = 0; i < 0xFFFFFFFF; i+=cPAGE_SIZE) {
+//		uintptr_t physicalPage = getPhysicalAddressForVirtual(i);
+//		if (i != physicalPage) {
+//			DEBUG_STREAM(TAG,"Sanity check failed at: " << hex << i << " with physical address: " << physicalPage);
+//		}
+//	}
+//	DEBUG_STREAM(TAG, "Pagetable passed sanity check");
+
+
+
+	uint32_t *ptStart = (uint32_t*)pageTable;
+
+	for(int i = 0;i < 10; i++) {
+		DEBUG_STREAM(TAG,"Pagetable[" << dec << i << "]: " << hex << *ptStart);
+		ptStart++;
 	}
 
-	DEBUG_STREAM(TAG,"TTBCR: " << hex << readTTBCR());
-	DEBUG_STREAM(TAG,"TTBR0: " << hex << readTTBR0() );DEBUG_STREAM(TAG,"SCTRL: " << hex << readSYSCTRL() );DEBUG_STREAM(TAG,"Activating MMU on core: " << hex << (unsigned int)getCPUID() << " with pagetable at: " << hex << mPagetable);
 	__asm__ __volatile__ (
 			"mov r0, #0xffffffff\n"
 			"mcr p15, 0, r0, c3, c0, 0\n"
@@ -84,7 +80,7 @@ void ARMMMU::activateMMU() {
 			"mcr p15, 0, r0, c1, c0, 0\n"
 			"MOV     r0, #0\n"
 			"MCR     p15, 0, r0, c8, c7, 0\n     // flush Translation look-aside buffer\n"
-			::[tlt]"r"(((uintptr_t)mPagetable)|0x5B):"r0","memory"); // (p. B4-1729 ARM ARM)
+			::[tlt]"r"((uintptr_t)pageTable):"r0","memory"); // (p. B4-1729 ARM ARM)
 	DEBUG_STREAM(TAG,"TTBR0: " << hex << readTTBR0() );DEBUG_STREAM(TAG,"SCTRL: " << hex << readSYSCTRL() );DEBUG_STREAM(TAG,"MMU active");
 }
 
@@ -153,117 +149,19 @@ void ARMMMU::deactivateMMU() {
 
 }
 
-void ARMMMU::setSectionCacheable(uintptr_t section, bool cacheable) {
-	unsigned int index = getIndexFromAddress(section);
-
-	// Make sure the section starts at 1mb boundary
-	section = section - (section % 0x100000);
-
-	// Get current translation table entry
-	dword_t entry = ARMMMU::mPagetable[index];
-	DEBUG_STREAM(TAG,"Setting section: " << hex << section << " to cacheable: " << cacheable << " from current value: " << entry);
-
-	// Set cacheable/bufferable bit [C=3, B=2]
-	if (cacheable) {
-		entry |= 0xC;
-	} else {
-		entry = entry & ~(0xC);
-	}
-	ARMMMU::mPagetable[index] = entry;
-	DEBUG_STREAM(TAG,"Setting section: " << hex << section << " to new value: " << entry);
-}
-
 void ARMMMU::setRangeCacheable(uintptr_t from, uintptr_t to, bool cacheable) {
-	// get indices for range
-	unsigned int beginIndex = getIndexFromAddress(from);
-	unsigned int endIndex = getIndexFromAddress(to);
+	ARMv7PageTable::secondLevelDescriptor_t *pageEntry = getSecondLevelPageTableEntryFromAddress(from);
 
-	DEBUG_STREAM(TAG,"Setting " << dec << (to-from) << " bytes, from address: " << hex << from << " to: " << to << " cacheable " << (uint16_t)cacheable);
+	while (from < to) {
+		pageEntry->c = cacheable;
+		pageEntry->b = cacheable;
 
-	dword_t entry;
+		flushTLBWithAddress(from);
 
-	do {
-		// Get current entry
-		entry = ARMMMU::mPagetable[beginIndex];
-		DEBUG_STREAM(TAG,"Setting MMU entry: " << dec << beginIndex << " from old value: " << hex << entry);
-		// Set cacheable/bufferable bit [C=3, B=2]
-		if (cacheable) {
-			entry |= 0xC;
-		} else {
-			entry = entry & ~(0xC);
-		}
-		// Save section entry
-		ARMMMU::mPagetable[beginIndex] = entry;
-		DEBUG_STREAM(TAG,"Setting MMU entry: " << dec << beginIndex << " to new value: " << hex << entry);
-		beginIndex++;
-	} while (beginIndex <= endIndex);
-}
-
-void ARMMMU::setRangeType(uintptr_t from, uintptr_t to, memory_section_type type) {
-	// get indices for range
-	unsigned int beginIndex = getIndexFromAddress(from);
-	unsigned int endIndex = getIndexFromAddress(to);
-
-	DEBUG_STREAM(TAG,"Setting type from: " << dec << beginIndex << " to: " << endIndex);
-
-	dword_t entry = 0;
-	uintptr_t addr = from;
-	for (unsigned int i = beginIndex; i <= endIndex; i++) {
-		if (type == MEMTYPE_DRAM) {
-			entry = addr | DRAM_MEMORY_CONFIGURATION_MASK;
-		} else {
-			entry = addr | DEVICE_MEMORY_CONFIGURATION_MASK;
-		}
-
-		// Save section entry
-		ARMMMU::mPagetable[i] = entry;
-//		DEBUG_STREAM(TAG,"New entry: " << hex << entry);
-		//DEBUG_STREAM(TAG,"Set MMU entry: " << dec << i << " to new value: " << hex << ARMMMU::mPagetable[i]);
-		addr += 0x100000;
+		from += cPAGE_SIZE;
 	}
 }
 
-void ARMMMU::resetAllAccessFlags() {
-	for (uint32_t i = 0; i < (4096); i++) {
-		//			DEBUG_STREAM(TAG, "Setting " << hex << entry << " with old value " << hex << (*entry));
-		//Making all parts fully accessable
-		//DEBUG_STREAM(TAG, "FROM " << hex << mPagetable[i]);
-		//mPagetable[i] |= 0b1 << 10;
-		dword_t entry = mPagetable[i];
-
-		entry |= (0b1 << 10);
-		mPagetable[i] = entry;
-		//DEBUG_STREAM(TAG, "TO " << hex << mPagetable[i]);
-	}
-//	uintptr_t testcomp=(uintptr_t)&OSC_PREFIX(ApplicationSystemInfo)::ApplicationSystemInfo::mInstance;
-//	testcomp=testcomp & 0xFFF00000;
-//	int i=getIndexFromAddress(testcomp);
-//
-//	dword_t entry=mPagetable[i];
-//
-//				entry &= ~(0b1 << 10);
-//				mPagetable[i]=entry;
-
-}
-
-/*
- * The Access Flag is used for the dynamic Memory Management. If DYNAMIC_CACHED is used, the allocated parts will be locked. When
- * the Memory is accessed, the Data Abort Exception will be catched and the corresponding memory will be preloaded.
- */
-void ARMMMU::enableAccessFlag() {
-	dword_t old = readSYSCTRL();
-	//This is Bit 29, the AFE
-	old |= (0x20000000);
-	writeSYSCTRL(old);
-//	flushTLB();
-}
-void ARMMMU::disableAccessFlag() {
-	dword_t old = readSYSCTRL();
-	//This is Bit 29, the AFE
-	old &= ~(0x20000000);
-	writeSYSCTRL(old);
-//	flushTLB();
-}
 void ARMMMU::enableMaintenanceBroadcasting(){
 	dword_t actlr=readACTLR();
 	//SMP (Bit 6) to 1
@@ -272,10 +170,6 @@ void ARMMMU::enableMaintenanceBroadcasting(){
 	actlr |= (0x1);
 	writeACTLR(actlr);
 	DEBUG_STREAM(TAG,"Enabled maintenance broadcasting: ACTLR is " << hex << readACTLR());
-}
-void ARMMMU::setPagetableEntry(uintptr_t address, dword_t entry) {
-	uint32_t index = getIndexFromAddress(address);
-	mPagetable[index] = entry;
 }
 
 dword_t ARMMMU::readTTBCR() {
@@ -312,8 +206,27 @@ void ARMMMU::writeACTLR(dword_t sctrl) {
 }
 
 uintptr_t ARMMMU::getPhysicalAddressForVirtual(uintptr_t virtualAddress) {
-	// FIXME
-	return virtualAddress;
+	return (getSecondLevelPageTableEntryFromAddress(virtualAddress)->smallPageBaseAddress << 12) | (virtualAddress & 0xFFF);
+}
+
+ARMv7PageTable::secondLevelDescriptor_t* ARMMMU::getSecondLevelPageTableEntryFromAddress(uintptr_t address) {
+	uintptr_t index = (address >> 20);
+//	DEBUG_STREAM(TAG, "First index: " << dec << index);
+
+	// Manual pagetable walk
+	ARMv7PageTable::firstLevelDescriptor_t *firstEntry = &ARMv7PageTable::sInstance.getFirstLevelBaseAddress()[index];
+
+//	DEBUG_STREAM(TAG,"First entry: " << hex << *(uint32_t*)firstEntry);
+
+	index = (address >> 12) & 0xFF;
+//	DEBUG_STREAM(TAG, "Second index: " << dec << index);
+
+
+	// Get second level entry
+//	DEBUG_STREAM(TAG, "Second table at: " << hex << (firstEntry->secondLevelPageTableBaseAddress << 10));
+	ARMv7PageTable::secondLevelDescriptor_t *secondEntry = &((ARMv7PageTable::secondLevelDescriptor_t *)(firstEntry->secondLevelPageTableBaseAddress << 10))[index];
+//	DEBUG_STREAM(TAG,"Second entry: " << hex << *(uint32_t*)secondEntry);
+	return secondEntry;
 }
 
 void ARMMMU::mapVirtualPageToPhysicalAddress(uintptr_t virtualPage, uintptr_t physicalPage, bool cacheable) {
