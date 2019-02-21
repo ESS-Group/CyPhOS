@@ -90,7 +90,7 @@ void init_soc()
 	 * 0x1: core 0
 	 */
 
-	OSC_PREFIX(Timer)::CortexA9GlobalTimer::pInstance.initializeTimer();
+//	OSC_PREFIX(Timer)::CortexA9GlobalTimer::pInstance.initializeTimer();
 	OSC_PREFIX(Timer)::CortexA9GlobalTimer::pInstance.dumpStatus();
 #ifdef CONFIG_CAN
 	OSC_PREFIX(MCP2515SPI)::MCP2515SPI::mInstance.resetController();

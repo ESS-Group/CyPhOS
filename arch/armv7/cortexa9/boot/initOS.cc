@@ -176,16 +176,6 @@ inline void setHoldingPen(int32_t val) {
 
 	DEBUG_STREAM(TAG,"SCTLR: " << hex << getSCTLR() << " ACTLR: " << getACTLR());
 
-	/* Iterate of available cores and boot them up */
-#ifdef CONFIG_BOOT_MULTICORE
-	for (uint8_t core = 1; core < NR_CPUS; core++) {
-		setHoldingPen(core);
-		startup_core(core);
-		/* Wait for the secondary core to finish its initialization */
-		waitForSecondary();
-	}
-	DEBUG_STREAM(TAG,"All cores should be up now :-)");
-#endif
 
 	/* If os-controlled cache management is enabled, make sure that the critical parts (interrupt,eventhandling) are
 	 * locked & loaded in the cache.
@@ -200,6 +190,19 @@ inline void setHoldingPen(int32_t val) {
 #else
 	DEBUG_STREAM(TAG,"CyPhOS cache management is inactive");
 #endif
+
+
+	/* Iterate of available cores and boot them up */
+#ifdef CONFIG_BOOT_MULTICORE
+	for (uint8_t core = 1; core < NR_CPUS; core++) {
+		setHoldingPen(core);
+		startup_core(core);
+		/* Wait for the secondary core to finish its initialization */
+		waitForSecondary();
+	}
+	DEBUG_STREAM(TAG,"All cores should be up now :-)");
+#endif
+
 
 	/* Initialize the ARM generic interrupt controller distributor & core interface. */
 	DEBUG_STREAM(TAG,"Start initializing GIC");

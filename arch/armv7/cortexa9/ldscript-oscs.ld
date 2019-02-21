@@ -9,11 +9,6 @@ __oscs__end = .;
 .critical_osc : 
 {
 	__critical_osc_start = .;
-	__pagetable_start = .;
-	. = . + 4096 * 4;
-	__pagetable_end = .;
-    	
-
 	./build/arch/armv7/interrupts/arm_jumptable.oS("*")
 
 	./build/arch/armv7/interrupts/first_stage_handler_critical.oS("*")
@@ -31,7 +26,7 @@ __oscs__end = .;
 
  	./build/eventhandling/MultiQueuePriorityStrategy.o(".text")
 	./build/common/RandomGenerator.o(".text")
-	./build/arch/armv7/driver/ARMMMU.o(".text")
+	
 	./build/core/SystemMode.o(".text")
 	
 	__critical_osc_text_end = .;
@@ -44,7 +39,7 @@ __oscs__end = .;
 	./build/eventhandling/StackPool.o(".*data*")
 	
 	./build/cachemanagement/GenericCacheManagement.o(".*data*")
-	./build/arch/armv7/driver/ARMMMU.o(".*data*")
+	
 	
 	./build/interrupts/InterruptDispatcher.o(".data*")
 	./build/core/SystemMode.o(".*data*")
@@ -56,7 +51,7 @@ __oscs__end = .;
 
 	__NS_CRITICAL_OSC__bss_start = .;
 	./build/eventhandling/EventHandler.o(".bss")
-	./build/arch/armv7/driver/ARMMMU.o(".bss")
+
 	./build/interrupts/InterruptDispatcher.o(".bss")
 	./build/arch/armv7/interrupts/first_stage_handler.o(".bss")
 	./build/eventhandling/StackPool.o(".bss")
@@ -67,6 +62,12 @@ __oscs__end = .;
 
 	./build/core/SystemMode.o(".bss")
 	__NS_CRITICAL_OSC__bss_end = .;
+	
+
+	. = ALIGN(0x10000);
+	./build/arch/armv7/driver/ARMMMU.o(".text")
+	./build/arch/armv7/driver/ARMMMU.o(".*data*")
+	./build/arch/armv7/driver/ARMMMU.o(".bss")
 	
 	*(".critical_data")
 	*(".text")

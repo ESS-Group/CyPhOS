@@ -8,6 +8,10 @@
 .align 0x1
 .global _secondary_boot
 
+.global global_pagetable_address;
+global_pagetable_address:
+	.word 0x0
+
 /**
  * Entry point for secondary cpus. They'll start their execution right here after being woken up
  * the bootrom initializes their caches and jumps here. This means we should deactivate the caches
@@ -102,6 +106,22 @@ _secondary_boot:
     LDR R0,=__boot_stack_start
     SUB R0,R0,R2
 	MOV sp,R0
+
+	// We need to activate the MMU to ensure the critical section is correctly mapped
+	mov r0, #0xffffffff
+	mcr p15, 0, r0, c3, c0, 0
+	mcr p15, 0, r0, c7, c5, 0
+	mcr p15, 0, r0, c7, c5, 6
+	mcr p15, 0, r0, c8, c6, 0
+	LDR r1,=global_pagetable_address
+	LDR R0,[R1]
+	mcr p15, 0, r0, c2, c0, 0
+	MRC    p15, 0, r0, c1, c0, 0
+	ORR    r0, r0, #1 // MMU
+	ORR    r0, r0, #(1<<11) // Branch prediction
+	mcr p15, 0, r0, c1, c0, 0
+	MOV     r0, #0
+	MCR     p15, 0, r0, c8, c7, 0     // flush Translation look-aside buffer
 
 #ifdef CONFIG_EARLY_L1_CACHE_ENABLE
 	// Disable both caches (data/instruction)

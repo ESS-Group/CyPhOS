@@ -72,6 +72,8 @@ public:
 	void enableInstructionCache();
 	void disableInstructionCache();
 
+	void invalidateInstructionCache();
+
 	void enableUnifiedCache();
 	void disableUnifiedCache();
 

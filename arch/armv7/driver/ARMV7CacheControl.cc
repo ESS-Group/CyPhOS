@@ -76,6 +76,11 @@ void ARMV7CacheControl::disableSMPMode() {
 
 
 
+
+void ARMV7CacheControl::invalidateInstructionCache() {
+	OSC_FUNC_ASM(CacheControl,asm_invalidate_instruction_cache)();
+}
+
 void ARMV7CacheControl::cleanAndInvalidate_Data_Caches() {
 	OSC_FUNC_ASM(CacheControl,asm_clean_and_invalidate_data_caches)();
 }

@@ -18,6 +18,8 @@ GenericMMU::GenericMMU() {
 	sInstance = this;
 }
 
+
+
 void GenericMMU::moveVirtualPageToPhysicalAddress(uintptr_t virtualPage, uintptr_t physicalPage, bool cacheable) {
 #ifdef CONFIG_DEBUG_MMU
 	DEBUG_STREAM(TAG,"Move virtual page:" << hex << virtualPage << " to physical page: " << physicalPage);

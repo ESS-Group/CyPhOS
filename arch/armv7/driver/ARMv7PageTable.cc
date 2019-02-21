@@ -12,6 +12,8 @@
 
 __attribute__ ((section (".pagetable"))) ARMv7PageTable ARMv7PageTable::sInstance;
 
+extern uintptr_t global_pagetable_address;
+
 void ARMv7PageTable::fillLinear() {
 	// Create first table linkage to second level tables
 	uint32_t *firstLevelEntry = (uint32_t*)getFirstLevelBaseAddress();
@@ -36,4 +38,5 @@ void ARMv7PageTable::fillLinear() {
 
 	}
 
+	global_pagetable_address = (uintptr_t)getFirstLevelBaseAddress();
 }

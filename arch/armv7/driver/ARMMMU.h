@@ -46,14 +46,11 @@ public:
 	void flushTLBWithAddress(uintptr_t address);
 	void flushTLBWithoutBroadcast();
 
-	void dumpPageTable();
-
 	/** Static instance variable */
 	static ARMMMU pInstance;
 private:
 	size_t cPAGE_SIZE = 4096;
 	uintptr_t cDUMMY_PAGE_ADDRESS = 0x0;
-	dword_t *mPagetable;
 
 	static memory_map_entry_t memoryMap[];
 

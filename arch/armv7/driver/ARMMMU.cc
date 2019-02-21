@@ -11,6 +11,8 @@
 
 #include <common/armhelper.h>
 
+#include <driver/ARMV7CacheControl.h>
+
 /* Debugging */
 #include <common/debug.h>
 #define TAG "ARMMMU"
@@ -24,7 +26,6 @@
 /* Static instance */
 ARMMMU ARMMMU::pInstance;
 
-extern uintptr_t __pagetable_start;
 /*
  * This will use the preprocessor macro defined for the specific architecture to fill this memory map with content,
  * during compilation.
@@ -32,16 +33,10 @@ extern uintptr_t __pagetable_start;
 memory_map_entry_t ARMMMU::memoryMap[] = ARM_MEMORY_MAP;
 
 ARMMMU::ARMMMU() : GenericMMU() {
-	mPagetable = (dword_t*) &__pagetable_start;
 }
 
 
 
-void ARMMMU::dumpPageTable() {
-	for (uint32_t i = 0; i < 4096; i++) {
-		DEBUG_STREAM(TAG,"Pagetable entry: " << dec << i << ", value:" << hex << *(ARMMMU::mPagetable + i));
-	}
-}
 
 void ARMMMU::activateMMU() {
 	uintptr_t pageTable = (uintptr_t)ARMv7PageTable::sInstance.getFirstLevelBaseAddress();
@@ -103,6 +98,8 @@ void ARMMMU::flushTLBWithAddress(uintptr_t address) {
 			"MCR p15, 0, r0, c8, c3, 0\n"
 			"DSB\n"
 			"ISB": : : "memory");
+
+	CacheManagement::ARMV7CacheControl::pInstance.invalidateInstructionCache();
 }
 
 void ARMMMU::flushTLBWithoutBroadcast(){
@@ -232,10 +229,22 @@ ARMv7PageTable::secondLevelDescriptor_t* ARMMMU::getSecondLevelPageTableEntryFro
 void ARMMMU::mapVirtualPageToPhysicalAddress(uintptr_t virtualPage, uintptr_t physicalPage, bool cacheable) {
 	volatile ARMv7PageTable::secondLevelDescriptor_t *entry = getSecondLevelPageTableEntryFromAddress(virtualPage);
 
+	CacheManagement::ARMV7CacheControl::pInstance.cleanAndInvalidate_Data_Caches();
+#ifdef CONFIG_DEBUG_MMU
+	DEBUG_STREAM(TAG,"Map virtual address: " << hex << virtualPage << " from: " << (entry->smallPageBaseAddress << 12) << " to: " << physicalPage);
+#endif
+
 	entry->smallPageBaseAddress = (physicalPage >> 12);
 
 	entry->b = cacheable;
-	entry->s = cacheable;
+	entry->c = cacheable;
 
-	flushTLBWithAddress(virtualPage);
+	// FIXME
+	__asm__ __volatile__ (
+			"ISB\n"
+			"DSB\n"
+			"MOV     r0, #0\n"
+			"MCR p15, 0, r0, c8, c3, 0\n": : : "memory");
+
+	CacheManagement::ARMV7CacheControl::pInstance.invalidateInstructionCache();
 }
