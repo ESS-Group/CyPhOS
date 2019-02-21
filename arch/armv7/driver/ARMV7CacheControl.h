@@ -10,12 +10,10 @@
 
 #include <common/types.h>
 #include <common/ARM_common.h>
-#include <common/debug.h>
 #include <component/LockedOSC.h>
 #include <eventhandling/Trigger.h>
 #include <eventhandling/EventTask.h>
 
-#include <sync/Spinlock.h>
 #include "PL310_registers.h"
 
 #include <common/memreg.h>
@@ -28,18 +26,6 @@
 #error "PL310 cache-way count not defined"
 #endif
 
-
-// Inverted bit masks (0 means allocation, 1 lockdown)
-#define CORE_0_LOCKDOWN_MASK (~0xCCCC)
-#define CORE_1_LOCKDOWN_MASK (~0x3333)
-
-// FIXME separate
-// Omap 4460 Monitor Calls (see OMAP4460 TRM p. 5760)
-#define OMAP_SMC_WRITE_L2_DEBUG_REGISTER 0x100
-#define OMAP_SMC_CACHE_CLEAN_INVALIDATE_RANGE_PHYSICAL 0x101
-#define OMAP_SMC_L2_CACHE_CONTROL_REGISTER 0x102
-#define OMAP_SMC_L2_AUXILARY_CONTROL_REGISTER 0x109
-#define OMAP_SMC_PREFETCH_CONTROL_REGISTER 0x113
 
 
 #ifndef PL310_ENABLE_FUNC
@@ -70,7 +56,7 @@ void armv7_disable_pl310();
 
 namespace CacheManagement {
 
-class ARMV7CacheControl : public GenericCacheManagement {
+class ARMV7CacheControl {
 
 public:
 	ARMV7CacheControl();
@@ -109,8 +95,7 @@ public:
 
 	// L1 cache register information
 	void printCacheInformation();
-	// L2 cache controller information
-	void pl310_printInformation();
+
 
 
 //	/*
@@ -120,21 +105,7 @@ public:
 
 	void enableL1Caches();
 
-	// L2 cache control functions
-	/**
-	 * Enables the l2 cache controller with invalidate
-	 */
-	void pl310_enableL2Cache();
-	/**
-	 * Disables the l2 cache controller with invalidate
-	 */
-	void pl310_disableL2Cache();
-	/**
-	 * Invalidates the l2 cache controller
-	 */
-	void pl310_invalidateSharedCache();
 
-	void pl310_cleanSharedCache();
 
 	/*
 	 * Flow prediction control. Controlled with arm coprocessor registers
@@ -143,12 +114,7 @@ public:
 	void disableBranchPrediction();
 	void invalidateBranchPrediction();
 
-	void pl310_LockdownByLine(bool enable);
 
-	void pl310_LockdownByLineCleanLockdown(uint8_t way);
-
-//	void pl310LockdownByCore();
-//	void pl310LockdownByCore(bool lockdown);
 
 	/**
 	 * Locks or unlocks way depending on lockdown value.
@@ -175,33 +141,13 @@ public:
 	/* Static instance variable */
 	static ARMV7CacheControl pInstance;
 private:
-	static constexpr uint8_t cMaxLockdownRegisters = 8;
-	static constexpr cycle_t cRamAccessTimeThreshold = 100;
 
-	static constexpr uint32_t cCACHE_WAY_SIZE = 64 * 1024;
-	/**
-	 * Enum values for synchronous cache operations.
-	 */
-	enum CACHE_OPERATION {
-		ENABLE_L1, DISABLE_L1, CLEAN_AND_INVALIDATE_L1, ENABLE_L2, NO_CACHE_OP
-	};
 
 	void setCSSELR(dword_t regContent);
-	CACHE_OPERATION mOperation;
-
-
-	void pl310_enable();
-	void pl310_disable();
-
 
 protected:
-	void prefetchDataToWay(uintptr_t start, uintptr_t end, uintptr_t textEnd, cacheways_t way, cycle_t *duration);
-	void evictCacheWay(cacheways_t way, cycle_t *duration);
-	void evictMemoryRange(uintptr_t start, uint64_t size);
 
-	size_t getCacheWaySize() {return cCACHE_WAY_SIZE;}
 
-	cycle_t getRAMAccessTimeThreshold() {return cRamAccessTimeThreshold;}
 };
 
 } /* namespace CacheManagement */

@@ -21,6 +21,9 @@
 /* Include Cache control driver */
 #include <driver/ARMV7CacheControl.h>
 
+/* Include PL310 driver */
+#include <cachemanagement/PL310CacheManagement.h>
+
 /* Event dispatcher */
 #include <eventhandling/EventHandler.h>
 
@@ -163,7 +166,7 @@ inline void setHoldingPen(int32_t val) {
 
 	/* Enable the level 2 shared cache controller */
 	DEBUG_STREAM(TAG, "L2 Cache enabling");
-	CacheManagement::ARMV7CacheControl::pInstance.pl310_enableL2Cache();
+	CacheManagement::PL310CacheManagement::sInstance.setEnabled(true);
 	DEBUG_STREAM(TAG, "Cache enabled");
 	CacheManagement::ARMV7CacheControl::pInstance.printCacheInformation();
 
@@ -188,7 +191,7 @@ inline void setHoldingPen(int32_t val) {
 	 * locked & loaded in the cache.
 	 */
 #ifdef CONFIG_CACHE_CONTROL
-	DEBUG_STREAM(TAG,"CyPhOS cache management is active");
+	DEBUG_STREAM(TAG,"CyPhOS cache management is active: " << hex << CacheManagement::GenericCacheManagement::sInstance);
 	/* Load critical OSC with eventhandler, IRQ dispatching ... to cache */
 	CacheManagement::GenericCacheManagement::sInstance->preloadCriticalData((void*)&__critical_osc_start,(void*)&__critical_osc_end,(void*)&__critical_osc_text_end);
 

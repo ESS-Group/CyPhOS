@@ -51,10 +51,5 @@
 		__benchmark_results__end = .;
 	}
 	
-	/* After all, put the beginning for dynamic memory usage, aligned to 1MB because of the Pagetable*/
-    . = ALIGN(0x100000);
-    .dynamicmemory : 
-    {
-        __dynamicmemory_mempool_start = .;
-    }
-	
+	. = ALIGN(0x10000);
+	__cache_coloring_start = .;

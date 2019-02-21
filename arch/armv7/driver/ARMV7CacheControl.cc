@@ -18,23 +18,16 @@
 
 #define TAG "CACHECONTROL"
 #include <common/SyncOutput.h>
-extern "C" {
-
-void armv7_disable_pl310() {
-	CacheManagement::ARMV7CacheControl::pInstance.pl310_disableL2Cache();
-}
-}
 
 
 namespace CacheManagement {
-ARMV7CacheControl::ARMV7CacheControl() : GenericCacheManagement(),
-		mOperation(NO_CACHE_OP){
-	// Nothing here for now
-	mCacheWayCount = PL310_CACHE_WAYS;
-#ifdef CONFIG_ARM_STANDBY_CACHE_WAYS
-	// Reduce cache-way count by the number of cpus for standby usage
-	mCacheWayCount -= NR_CPUS;
-#endif
+/**
+ * Static singleton instance
+ */
+ARMV7CacheControl ARMV7CacheControl::pInstance;
+
+ARMV7CacheControl::ARMV7CacheControl(){
+
 
 }
 
@@ -81,51 +74,7 @@ void ARMV7CacheControl::disableSMPMode() {
 			:::"memory");
 }
 
-void ARMV7CacheControl::pl310_enable() {
 
-	pl310_invalidateSharedCache();
-	PL310_ENABLE_FUNC
-	();
-	BUSY_WAITING_SHORT
-	;
-
-#ifdef CONFIG_CACHE_CONTROL
-	/* Cleanup management structure */
-	for ( cacheways_t i = 0; i < PL310_CACHE_WAYS; i++ ) {
-		mCacheWays[i] = {false,LRU_MAX_VALUE,0x0};
-#ifdef PL310_LOCKDOWN_BY_MASTER
-		pl310_LockCacheWay_All_Master(i,true);
-#else
-		pl310_LockCacheWay(i, true);
-#endif
-
-	}
-#endif
-
-
-	for (cacheways_t i = 0; i < PL310_CACHE_WAYS; i++ ) {
-		// Clean all ways
-		cleanAndInvalidateWay(i);
-	}
-	BUSY_WAITING_SHORT
-
-#ifdef PL310_LOCKDOWN_BY_LINE
-	pl310_LockdownByLine(true);
-#endif
-
-	printCacheWayInformation();
-}
-
-void ARMV7CacheControl::pl310_disable() {
-	// Flush and invalidate before disabling
-	pl310_cleanSharedCache();
-	DSB;
-	PL310_DISABLE_FUNC
-	();
-	ISB;
-	DSB;
-	BUSY_WAITING_SHORT
-}
 
 void ARMV7CacheControl::cleanAndInvalidate_Data_Caches() {
 	OSC_FUNC_ASM(CacheControl,asm_clean_and_invalidate_data_caches)();
@@ -225,91 +174,11 @@ void ARMV7CacheControl::printCacheInformation() {
 			DEBUG_STREAM(TAG,"Data cache: " << hex << readCCSIDR());
 		}
 	}
-
-	pl310_printInformation();
 }
 
 
 void ARMV7CacheControl::setCSSELR(dword_t regContent) {
 	asm ( "MCR p15, 2, %0, c0, c0, 0;" :: "r"(regContent));
-}
-
-
-/* See PL310 trm p. 70 */
-void ARMV7CacheControl::pl310_enableL2Cache() {
-	pl310_enable();
-}
-
-void ARMV7CacheControl::pl310_disableL2Cache() {
-	/*__asm__ __volatile__ ("mrc p15, 0, r0, c1, c0, 1\n"
-	 "bic r0, r0, #0x2\n"
-	 "mcr p15, 0, r0, c1, c0, 1\n" : : :"r0","memory");*/
-	pl310_disable();
-#ifdef DEBUG_OUTPUT
-	printPL310Information();
-#endif
-}
-
-void ARMV7CacheControl::pl310_invalidateSharedCache() {
-	dword_t regVal = READ_REGISTER(PL310_BASE_ADDRESS+PL310_INVALIDATE_BY_WAY);
-	regVal = 0xffff;
-	WRITE_REGISTER(PL310_BASE_ADDRESS+PL310_INVALIDATE_BY_WAY, regVal);
-	// Wait for completion
-	while(READ_REGISTER(PL310_BASE_ADDRESS + PL310_CLEAN_AND_INVALIDATE_BY_WAY) != 0) {}
-
-	// Sync the PL310
-	WRITE_REGISTER((PL310_BASE_ADDRESS + PL310_SYNC), 0x1);
-	while(READ_REGISTER(PL310_BASE_ADDRESS + PL310_SYNC) != 0) {}
-}
-
-void ARMV7CacheControl::pl310_cleanSharedCache() {
-	dword_t regVal = 0xffff;
-	WRITE_REGISTER(PL310_BASE_ADDRESS+PL310_CLEAN_BY_WAY, regVal);
-	ISB;
-	DSB;
-	// Wait for completion
-	regVal = READ_REGISTER(PL310_BASE_ADDRESS+PL310_CLEAN_BY_WAY);
-	while ((regVal & 0xFFFF) != 0) {
-		regVal = READ_REGISTER(PL310_BASE_ADDRESS+PL310_CLEAN_BY_WAY);
-	}
-	ISB;
-	DSB;
-}
-
-void ARMV7CacheControl::pl310_printInformation() {
-	DEBUG_STREAM(TAG,"Printing PL310 Level2 controller information" ); DEBUG_STREAM(TAG,"reg0_cache_id: " << hex
-			<< (uint32_t) READ_REGISTER(PL310_BASE_ADDRESS+PL310_CACHE_ID)
-	); DEBUG_STREAM(TAG,"reg0_cache_type: " << hex
-			<< (uint32_t) READ_REGISTER(
-					PL310_BASE_ADDRESS+PL310_CACHE_TYPE) ); DEBUG_STREAM(TAG,"reg1_control: " << hex
-			<< (uint32_t) READ_REGISTER(
-					PL310_BASE_ADDRESS+PL310_CACHE_CONTROL) ); DEBUG_STREAM(TAG,"reg1_aux_control: " << hex
-			<< (uint32_t) READ_REGISTER(
-					PL310_BASE_ADDRESS+PL310_AUXILARY_CONTROL) ); DEBUG_STREAM(TAG,"reg1_tag_ram_control: " << hex
-			<< (uint32_t) READ_REGISTER(
-					PL310_BASE_ADDRESS+PL310_TAG_RAM_CONTROL) ); DEBUG_STREAM(TAG,"reg1_data_ram_control: " << hex
-			<< (uint32_t) READ_REGISTER(
-					PL310_BASE_ADDRESS+PL310_DATA_RAM_CONTROL) ); DEBUG_STREAM(TAG,"reg15_power_ctrl: " << hex
-			<< (uint32_t) READ_REGISTER(
-					PL310_BASE_ADDRESS+PL310_POWER_CONTROL) );
-					DEBUG_STREAM(TAG,"reg2_ev_counter_ctrl: " << hex
-								<< (uint32_t) READ_REGISTER(
-										PL310_BASE_ADDRESS+PL310_EVENT_COUNTER_CONTROL) );
-					DEBUG_STREAM(TAG,"reg2_ev_counter0_cfg: " << hex
-								<< (uint32_t) READ_REGISTER(
-										PL310_BASE_ADDRESS + PL310_EVENT_COUNTER_COUNT0_CFG) );
-					DEBUG_STREAM(TAG,"reg2_ev_counter1_cfg: " << hex
-								<< (uint32_t) READ_REGISTER(
-										PL310_BASE_ADDRESS + PL310_EVENT_COUNTER_COUNT1_CFG) );
-					DEBUG_STREAM(TAG,"reg15_prefetch_ctrl: " << hex
-								<< (uint32_t) READ_REGISTER(
-										PL310_BASE_ADDRESS + PL310_PREFETCH_CONTROL) );
-
-#ifdef PL310_LOCKDOWN_BY_MASTER
-	DEBUG_STREAM(TAG,"PL310 lockdown by master enabled");
-#else
-	DEBUG_STREAM(TAG,"PL310 lockdown by master disabled");
-#endif
 }
 
 void ARMV7CacheControl::enableBranchPrediction() {
@@ -342,47 +211,6 @@ void ARMV7CacheControl::invalidateBranchPrediction() {
 			:::"r0","memory");
 }
 
-void ARMV7CacheControl::swIntHandler() {
-	/* Various cache management operations that should be done
-	 * synchronously across the cores.
-	 */
-	switch (mOperation) {
-	case ENABLE_L1:
-		cleanAndInvalidate_Data_Caches();
-		enableUnifiedCache();
-		enableInstructionCache();
-		cleanAndInvalidate_Data_Caches();
-		BUSY_WAITING_LONG
-		;
-		break;
-	case DISABLE_L1:
-		cleanAndInvalidate_Data_Caches();
-		disableUnifiedCache();
-		disableInstructionCache();
-		cleanAndInvalidate_Data_Caches();
-		BUSY_WAITING_LONG
-		;
-		break;
-	case ENABLE_L2:
-		if (getCPUID() == 0x0) {
-			pl310_enableL2Cache();
-		} else {
-			BUSY_WAITING_LONG
-			;
-		}
-		break;
-	case CLEAN_AND_INVALIDATE_L1:
-		cleanAndInvalidate_Data_Caches();
-		break;
-	case NO_CACHE_OP:
-		break;
-	}
-	mOperation = NO_CACHE_OP;
-	BUSY_WAITING_SHORT
-	;
-
-	return;
-}
 
 void ARMV7CacheControl::enableL1Caches() {
 	invalidate_Data_Caches();

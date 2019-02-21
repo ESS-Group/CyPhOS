@@ -27,7 +27,6 @@ __oscs__end = .;
 
 	./build/eventhandling/StackPool.o(".text*")
 	./build/cachemanagement/GenericCacheManagement.o(".text")
-	./build/arch/armv7/driver/ARMV7CacheControl_critical.o(".text")
 	./build/interrupts/InterruptDispatcher.o(".text*")
 
  	./build/eventhandling/MultiQueuePriorityStrategy.o(".text")
@@ -45,7 +44,6 @@ __oscs__end = .;
 	./build/eventhandling/StackPool.o(".*data*")
 	
 	./build/cachemanagement/GenericCacheManagement.o(".*data*")
-	./build/arch/armv7/driver/ARMV7CacheControl_critical.o(".*data*")
 	./build/arch/armv7/driver/ARMMMU.o(".*data*")
 	
 	./build/interrupts/InterruptDispatcher.o(".data*")
@@ -58,7 +56,6 @@ __oscs__end = .;
 
 	__NS_CRITICAL_OSC__bss_start = .;
 	./build/eventhandling/EventHandler.o(".bss")
-	./build/arch/armv7/driver/ARMV7CacheControl_critical.o(".bss")
 	./build/arch/armv7/driver/ARMMMU.o(".bss")
 	./build/interrupts/InterruptDispatcher.o(".bss")
 	./build/arch/armv7/interrupts/first_stage_handler.o(".bss")

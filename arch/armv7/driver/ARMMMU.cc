@@ -230,5 +230,12 @@ ARMv7PageTable::secondLevelDescriptor_t* ARMMMU::getSecondLevelPageTableEntryFro
 }
 
 void ARMMMU::mapVirtualPageToPhysicalAddress(uintptr_t virtualPage, uintptr_t physicalPage, bool cacheable) {
-	// FIXME
+	volatile ARMv7PageTable::secondLevelDescriptor_t *entry = getSecondLevelPageTableEntryFromAddress(virtualPage);
+
+	entry->smallPageBaseAddress = (physicalPage >> 12);
+
+	entry->b = cacheable;
+	entry->s = cacheable;
+
+	flushTLBWithAddress(virtualPage);
 }
