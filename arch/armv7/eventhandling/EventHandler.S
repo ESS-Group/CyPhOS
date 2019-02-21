@@ -31,7 +31,7 @@ activateDispatching:
 // Calculate the offset
 	MUL R2,R1,R0
 // Load the stack start address
-	LDR R0,=__boot_stack_start
+	LDR R0,=__runtime_stack_start
 // Subtract the actual offset value
 	SUB R0,R0,R2
 // Set the stackpointer

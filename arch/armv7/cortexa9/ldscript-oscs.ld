@@ -78,10 +78,9 @@ __oscs__end = .;
 	
 	/* Full-descending stack for cores (please be cautious with offsets) */
     . = ALIGN(0x8);
-	__boot_stack_end = .;
+	__runtime_stack_end = .;
 	. = . + 512 * 4;
-	__boot_stack_start = .;
-
+	__runtime_stack_start = .;
 	
 	__critical_osc_end = .;
 	/* ASSERT( . - __critical_osc_start <= 0x10000 , "Permanent preloading section >64k");*/
