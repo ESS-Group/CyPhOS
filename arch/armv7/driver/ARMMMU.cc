@@ -77,6 +77,7 @@ void ARMMMU::activateMMU() {
 			"MCR     p15, 0, r0, c8, c7, 0\n     // flush Translation look-aside buffer\n"
 			::[tlt]"r"((uintptr_t)pageTable):"r0","memory"); // (p. B4-1729 ARM ARM)
 	DEBUG_STREAM(TAG,"TTBR0: " << hex << readTTBR0() );DEBUG_STREAM(TAG,"SCTRL: " << hex << readSYSCTRL() );DEBUG_STREAM(TAG,"MMU active");
+	flushTLB();
 }
 
 void ARMMMU::flushTLB() {
@@ -250,8 +251,10 @@ void ARMMMU::mapVirtualPageToPhysicalAddress(uintptr_t virtualPage, uintptr_t ph
 
 	entry->smallPageBaseAddress = (physicalPage >> 12);
 
+#ifndef CONFIG_SET_ALL_PAGES_CACHEABLE
 	entry->b = cacheable;
 	entry->c = cacheable;
+#endif
 
 	// FIXME
 	__asm__ __volatile__ (

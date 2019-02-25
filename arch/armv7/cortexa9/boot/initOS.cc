@@ -66,6 +66,9 @@ extern dword_t first_jump_table_start;
 extern uintptr_t __benchmark_results__start;
 extern uintptr_t __benchmark_results__end;
 
+extern uintptr_t __pagestable_region_start;
+extern uintptr_t __pagestable_region_end;
+
 extern uintptr_t __oscs__start;
 extern uintptr_t __oscs__end;
 
@@ -133,6 +136,9 @@ inline void setHoldingPen(int32_t val) {
 	DEBUG_STREAM(TAG,"Set OSC region to cacheable");
 	ARMMMU::pInstance.setRangeCacheable((uintptr_t) &__critical_osc_start, (uintptr_t) &__critical_osc_end, true);
 	ARMMMU::pInstance.setRangeCacheable((uintptr_t) &__oscs__start, (uintptr_t) &__oscs__end, true);
+
+	ARMMMU::pInstance.setRangeCacheable((uintptr_t) &__pagestable_region_start, (uintptr_t) &__pagestable_region_end, false);
+	ARMMMU::pInstance.setRangeCacheable((uintptr_t) &__benchmark_results__start, (uintptr_t) &__benchmark_results__end, false);
 
 	/* Set the vbar address which defines where the exception vector table is located */
 	/* See first_stage_handler.* */

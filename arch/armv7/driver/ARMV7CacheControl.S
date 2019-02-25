@@ -152,7 +152,7 @@ OSC_FUNC_ASM(CacheControl,asm_invalidate_data_caches)
 3:
 	ORR R11, R10, R9, LSL R5 // factor in the way number and cache number into R11
 	ORR R11, R11, R7, LSL R2 // factor in the index number
-	MCR p15, 0, R11, c7, c6, 2 // DCISW, clean by set/way
+	MCR p15, 0, R11, c7, c6, 2 // DCISW, invalidate by set/way
 	SUBS R7, R7, #1 // decrement the index
 	BGE 3b
 	SUBS R9, R9, #1 // decrement the way number

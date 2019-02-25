@@ -33,7 +33,11 @@ private:
 	static constexpr uint32_t cFIRST_LEVEL_ENTRIES= 4096;
 	static constexpr uint32_t cSECOND_LEVEL_ENTIRES = 256;
 	static constexpr uint32_t cFIRST_LEVEL_FLAGS = 0x1;
+#ifdef CONFIG_SET_ALL_PAGES_CACHEABLE
+	static constexpr uint32_t cSECOND_LEVEL_FLAGS = 0x40E;
+#else
 	static constexpr uint32_t cSECOND_LEVEL_FLAGS = 0x402;
+#endif
 	firstLevelDescriptor_t __attribute__ ((aligned (0x10000))) firstLevelTable[cFIRST_LEVEL_ENTRIES];
 	secondLevelDescriptor_t __attribute__ ((aligned (0x10000))) secondLevelTable[cSECOND_LEVEL_ENTIRES * cFIRST_LEVEL_ENTRIES];
 

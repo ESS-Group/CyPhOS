@@ -219,6 +219,7 @@ void ARMV7CacheControl::invalidateBranchPrediction() {
 
 void ARMV7CacheControl::enableL1Caches() {
 	invalidate_Data_Caches();
+	invalidateInstructionCache();
 	enableUnifiedCache();
 	enableInstructionCache();
 	OSC_FUNC_ASM(CacheControl,asm_invalidate_instruction_cache)();

@@ -47,9 +47,12 @@ void GenericMMU::moveVirtualPageToPhysicalAddress(uintptr_t virtualPage, uintptr
 	if (dummyPage) {
 		mapVirtualPageToPhysicalAddress(dummyPageAddress, physicalPage, cacheable);
 		destination = (uint64_t*)dummyPageAddress;
-	} else {
+	}
+#ifndef CONFIG_SET_ALL_PAGES_CACHEABLE
+	else {
 		mapVirtualPageToPhysicalAddress(physicalPage, physicalPage, cacheable);
 	}
+#endif
 
 	// Copy page content
 	size_t pageSize = getPageSize();

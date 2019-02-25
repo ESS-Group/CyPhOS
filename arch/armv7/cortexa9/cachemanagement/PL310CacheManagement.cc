@@ -219,6 +219,7 @@ void PL310CacheManagement::setEnabled(bool enable) {
 }
 
 void PL310CacheManagement::invalidateSharedCache() {
+	DSB;
 	dword_t regVal = READ_REGISTER(PL310_BASE_ADDRESS+PL310_INVALIDATE_BY_WAY);
 	regVal = 0xffff;
 	WRITE_REGISTER(PL310_BASE_ADDRESS+PL310_INVALIDATE_BY_WAY, regVal);
@@ -231,6 +232,7 @@ void PL310CacheManagement::invalidateSharedCache() {
 }
 
 void PL310CacheManagement::cleanSharedCache() {
+	DSB;
 	dword_t regVal = READ_REGISTER(PL310_BASE_ADDRESS+PL310_CLEAN_BY_WAY);
 	regVal = 0xffff;
 	WRITE_REGISTER(PL310_BASE_ADDRESS+PL310_CLEAN_BY_WAY, regVal);
@@ -243,6 +245,7 @@ void PL310CacheManagement::cleanSharedCache() {
 }
 
 void PL310CacheManagement::cleanAndInvalidateSharedCache() {
+	DSB;
 	dword_t regVal = READ_REGISTER(PL310_BASE_ADDRESS+PL310_CLEAN_AND_INVALIDATE_BY_WAY);
 	regVal = 0xffff;
 	WRITE_REGISTER(PL310_BASE_ADDRESS+PL310_CLEAN_AND_INVALIDATE_BY_WAY, regVal);

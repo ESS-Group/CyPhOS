@@ -18,6 +18,8 @@
 	
 	.pagetable : 
 	{
+        __pagestable_region_start = .;
 		KEEP (*(.pagetable))
+	    __pagestable_region_end = .;
 	}
 
