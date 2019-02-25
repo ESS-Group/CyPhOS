@@ -15,11 +15,10 @@
 	__boot_stack_end = .;
 	. = . + 512 * 4;
 	__boot_stack_start = .;
-	
+
 	.pagetable : 
 	{
         __pagestable_region_start = .;
 		KEEP (*(.pagetable))
 	    __pagestable_region_end = .;
 	}
-

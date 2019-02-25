@@ -3,8 +3,8 @@
     __exidx_end = .;
 	
 	
-	/* Align to pagesize (4kB) */
-	. = ALIGN(0x1000); 
+	/* Align to pagesize (1MB) */
+	. = ALIGN(0x100000); 
     .text :
     {
     __text_segment__start = .;
@@ -39,8 +39,8 @@
     }
 
     /* Uncache benchmark results */
-	/* Align to pagesize (4kB) */
-	. = ALIGN(0x1000); 
+	/* Align to pagesize (1MB) */
+	. = ALIGN(0x100000); 
 	.benchmark_results : 
 	{
 		__benchmark_results__start = .;
@@ -51,5 +51,5 @@
 		__benchmark_results__end = .;
 	}
 	
-	. = ALIGN(0x100000);
+	. = ALIGN(0x10000);
 	__cache_coloring_start = .;
