@@ -16,7 +16,6 @@
 	. = . + 512 * 4;
 	__boot_stack_start = .;
 	
-	. = ALIGN(0x10000);
 	.pagetable : 
 	{
 		KEEP (*(.pagetable))

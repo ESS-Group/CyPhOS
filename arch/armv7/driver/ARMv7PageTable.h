@@ -34,8 +34,8 @@ private:
 	static constexpr uint32_t cSECOND_LEVEL_ENTIRES = 256;
 	static constexpr uint32_t cFIRST_LEVEL_FLAGS = 0x1;
 	static constexpr uint32_t cSECOND_LEVEL_FLAGS = 0x402;
-	firstLevelDescriptor_t __attribute__ ((aligned (0x1000))) firstLevelTable[cFIRST_LEVEL_ENTRIES];
-	secondLevelDescriptor_t __attribute__ ((aligned (0x1000))) secondLevelTable[cSECOND_LEVEL_ENTIRES * cFIRST_LEVEL_ENTRIES];
+	firstLevelDescriptor_t __attribute__ ((aligned (0x10000))) firstLevelTable[cFIRST_LEVEL_ENTRIES];
+	secondLevelDescriptor_t __attribute__ ((aligned (0x10000))) secondLevelTable[cSECOND_LEVEL_ENTIRES * cFIRST_LEVEL_ENTRIES];
 
 };
 
