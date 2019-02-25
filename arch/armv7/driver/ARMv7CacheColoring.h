@@ -19,15 +19,17 @@ public:
 
 private:
 	static constexpr cycle_t cRAMAccessTimeThreshold = 100;
-	static constexpr uint32_t cCACHE_COLOR_COUNT = 64 / 4; // LLC cache-way size / pagesize (64kB/4kB)
-	static constexpr uint32_t cCACHE_COLOR_SIZE = 16 * 4096; // LLC cache-way count * 4096b (page size)
+	static constexpr uint32_t cCACHE_WAY_COUNT = PL310_CACHE_WAYS;
+	static constexpr uint32_t cCACHE_WAY_SIZE = CONFIG_CACHE_WAY_SIZE;
+	static constexpr uint32_t cPAGES_PER_COLOR = 2;
 #ifdef CONFIG_ARMV7_CACHE_COLORING
 	static ARMv7CacheColoring sInstance;
 #endif
 
 protected:
-	virtual uint32_t getColorCount();
-	virtual uint32_t getColorSize();
+	virtual uint32_t getHWCacheWayCount();
+	virtual uint32_t getHWCacheWaySize();
+	virtual uint32_t getPagesPerColor();
 
 	virtual cycle_t getRAMAccessTimeThreshold();
 };

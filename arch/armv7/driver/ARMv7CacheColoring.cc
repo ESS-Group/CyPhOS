@@ -22,12 +22,17 @@ ARMv7CacheColoring::ARMv7CacheColoring() : CacheColoring() {
 	mColorsStart = (uintptr_t)&__cache_coloring_start;
 }
 
-uint32_t ARMv7CacheColoring::getColorCount() {
-	return cCACHE_COLOR_COUNT;
+
+uint32_t ARMv7CacheColoring::getHWCacheWayCount() {
+	return cCACHE_WAY_COUNT;
 }
 
-uint32_t ARMv7CacheColoring::getColorSize() {
-	return cCACHE_COLOR_SIZE;
+uint32_t ARMv7CacheColoring::getHWCacheWaySize() {
+	return cCACHE_WAY_SIZE;
+}
+
+uint32_t ARMv7CacheColoring::getPagesPerColor() {
+	return cPAGES_PER_COLOR;
 }
 
 cycle_t ARMv7CacheColoring::getRAMAccessTimeThreshold() {

@@ -24,10 +24,13 @@ void CacheColoring::prefetchDataToWay(uintptr_t start, uintptr_t end, uintptr_t 
 	// Move all pages to corresponding color
 	size_t pageSize = GenericMMU::sInstance->getPageSize();
 	uint32_t colorCount = getColorCount();
+	uint32_t pagesPerColor = getPagesPerColor();
 	// Force (downwards) alignment of component
 	start = start & ~(0xFFF);
 	uintptr_t currentPage = start;
+
 	uintptr_t colorOffset = 0;
+	uintptr_t pageOffset = 0;
 
 #ifdef CONFIG_CACHE_DEBUG
 	DEBUG_STREAM(TAG,"Preload from: " << hex << start << " to:" << end << " in way: " << dec << (uint32_t)way);
@@ -35,12 +38,20 @@ void CacheColoring::prefetchDataToWay(uintptr_t start, uintptr_t end, uintptr_t 
 	// Distribute all OSC pages to color pages
 	while (currentPage < end) {
 		// Calculates the correct position within the coloring space
-		uintptr_t colorAdditionOffset = (way * pageSize) + (colorOffset * pageSize * colorCount);
-
+		// (way * pageSize * pagesPerColor) : constant offset for virtual "way" (color)
+		// (colorOffset * pageSize * colorCount) : offset in color
+		uintptr_t colorAdditionOffset = (way * pageSize * pagesPerColor) + pageOffset;
+//		DEBUG_STREAM(TAG,"Calculated offset: " << hex << colorAdditionOffset);
 		GenericMMU::sInstance->moveVirtualPageToPhysicalAddress(currentPage, mColorsStart + colorAdditionOffset, true);
 
 		currentPage += pageSize;
 		colorOffset++;
+
+		if (colorOffset % pagesPerColor == 0) {
+			pageOffset += pageSize * pagesPerColor * colorCount;
+		} else {
+			pageOffset += pageSize;
+		}
 	}
 }
 
@@ -103,5 +114,14 @@ void CacheColoring::preloadSingleOSC(OSC* osc, cycle_t* duration) {
 }
 #endif
 
+uint32_t CacheColoring::getColorCount() {
+	return getHWCacheWaySize() / (GenericMMU::sInstance->getPageSize() * getPagesPerColor());
 }
+
+uint32_t CacheColoring::getColorSize() {
+	return GenericMMU::sInstance->getPageSize() * getPagesPerColor() * getHWCacheWayCount();
+}
+
+}
+
 

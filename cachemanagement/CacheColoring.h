@@ -19,8 +19,12 @@ public:
 
 
 protected:
-	virtual uint32_t getColorCount() = 0;
-	virtual uint32_t getColorSize() = 0;
+	virtual uint32_t getHWCacheWayCount() = 0;
+	virtual uint32_t getHWCacheWaySize() = 0;
+	virtual uint32_t getPagesPerColor() = 0;
+
+	uint32_t getColorCount();
+	uint32_t getColorSize();
 
 	uintptr_t mColorsStart;
 

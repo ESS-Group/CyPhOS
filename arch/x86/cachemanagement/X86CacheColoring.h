@@ -18,15 +18,17 @@ public:
 
 private:
 	static constexpr cycle_t cRAMAccessTimeThreshold = 100;
-	static constexpr uint32_t cCACHE_COLOR_COUNT = 512 / 4; // LLC cache-way size / pagesize (512kB/4kB)
-	static constexpr uint32_t cCACHE_COLOR_SIZE = 20 * 4096; // LLC cache-way count * 4096b (page size)
+	static constexpr uint32_t cCACHE_WAY_COUNT = 20;
+	static constexpr uint32_t cCACHE_WAY_SIZE = CONFIG_CACHE_WAY_SIZE;
+	static constexpr uint32_t cPAGES_PER_COLOR = 2;
 #ifdef CONFIG_AMD64_CACHE_COLORING
 	static X86CacheColoring sInstance;
 #endif
 
 protected:
-	virtual uint32_t getColorCount();
-	virtual uint32_t getColorSize();
+	virtual uint32_t getHWCacheWayCount();
+	virtual uint32_t getHWCacheWaySize();
+	virtual uint32_t getPagesPerColor();
 
 	virtual cycle_t getRAMAccessTimeThreshold();
 
