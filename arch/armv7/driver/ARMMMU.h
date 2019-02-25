@@ -46,6 +46,8 @@ public:
 	void flushTLBWithAddress(uintptr_t address);
 	void flushTLBWithoutBroadcast();
 
+	void setMemoryMap();
+
 	/** Static instance variable */
 	static ARMMMU pInstance;
 private:

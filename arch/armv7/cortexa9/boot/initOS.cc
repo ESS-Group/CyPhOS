@@ -127,6 +127,8 @@ inline void setHoldingPen(int32_t val) {
 	DEBUG_STREAM(TAG,"Initialize the pagetable");
 	ARMv7PageTable::sInstance.fillLinear();
 
+	ARMMMU::pInstance.setMemoryMap();
+
 	/* Set certain regions to cacheable */
 	DEBUG_STREAM(TAG,"Set OSC region to cacheable");
 	ARMMMU::pInstance.setRangeCacheable((uintptr_t) &__critical_osc_start, (uintptr_t) &__critical_osc_end, true);

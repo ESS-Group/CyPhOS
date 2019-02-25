@@ -102,6 +102,19 @@ void ARMMMU::flushTLBWithAddress(uintptr_t address) {
 	CacheManagement::ARMV7CacheControl::pInstance.invalidateInstructionCache();
 }
 
+void ARMMMU::setMemoryMap() {
+	memory_map_entry_t *entry = memoryMap;
+
+	while (entry->type != MEMTYPE_MEMORY_SECTION_TYPE_LAST) {
+		if (entry->cacheable == NONCACHEABLE) {
+			DEBUG_STREAM(TAG,"Enable non-cacheable device memory from: " << hex << entry->start << " to: " << (entry->start + entry->length));
+			setRangeCacheable(entry->start, entry->start + entry->length, false);
+		}
+		entry++;
+	}
+
+}
+
 void ARMMMU::flushTLBWithoutBroadcast(){
 	__asm__ __volatile__ (
 				"ISB\n"
@@ -147,9 +160,10 @@ void ARMMMU::deactivateMMU() {
 }
 
 void ARMMMU::setRangeCacheable(uintptr_t from, uintptr_t to, bool cacheable) {
-	ARMv7PageTable::secondLevelDescriptor_t *pageEntry = getSecondLevelPageTableEntryFromAddress(from);
+	ARMv7PageTable::secondLevelDescriptor_t *pageEntry = nullptr;
 
 	while (from < to) {
+		pageEntry = getSecondLevelPageTableEntryFromAddress(from);
 		pageEntry->c = cacheable;
 		pageEntry->b = cacheable;
 
