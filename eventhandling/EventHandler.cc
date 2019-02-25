@@ -438,7 +438,16 @@ void EventHandler::dispatching() {
 
 		// CAUTION: This needs to be synchronized in some way because the interrupt "handler" also enqueues events.
 		Core::SystemMode::mInstance.disableInterrupts();
+
+#ifdef CONFIG_PAGE_COLORING
+	pDataMovementLock.lock();
+#endif
+
 		task = pScheduling->getEvent(cpuNR);
+
+#ifdef CONFIG_PAGE_COLORING
+	pDataMovementLock.unlock();
+#endif
 		Core::SystemMode::mInstance.enableInterrupts();
 
 		// Check if an event is available to be dispatched
@@ -661,11 +670,6 @@ void EventHandler::callOSCTrigger(Trigger *trigger, dword_t arg) {
 }
 
 bool EventHandler::tryTaskLock(EventTask *task) {
-#ifdef CONFIG_PAGE_COLORING
-	pDataMovementLock.lock();
-#endif
-
-
 //	GenericMMU::sInstance->flushTLB();
 #ifdef CONFIG_DEBUG_LOCKING
 	DEBUG_STREAM(TAG,"Try locking EventTask: " << hex << task << " with OSC: " << task->trigger->pDestinationOSC);
@@ -710,9 +714,6 @@ bool EventHandler::tryTaskLock(EventTask *task) {
 				DEBUG_STREAM(TAG,"UNLOCK: " << hex << task->trigger->pDestinationOSC);
 #endif
 				task->trigger->pDestinationOSC->getLock()->unlock();
-#ifdef CONFIG_PAGE_COLORING
-				pDataMovementLock.unlock();
-#endif
 				return false;
 			} else {
 #ifdef CONFIG_DEBUG_LOCKING
@@ -725,9 +726,6 @@ bool EventHandler::tryTaskLock(EventTask *task) {
 			successCount++;
 		}
 	}
-#ifdef CONFIG_PAGE_COLORING
-	pDataMovementLock.unlock();
-#endif
 	return success;
 }
 
