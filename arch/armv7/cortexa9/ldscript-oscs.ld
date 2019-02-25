@@ -1,10 +1,10 @@
-. = ALIGN(0x100000);
+. = ALIGN(0x1000);
 __oscs__start = .;
 INCLUDE OSC.ld
 __oscs__end = .;	
 
 /* Align to page granularity */
-. = ALIGN(0x100000);
+. = ALIGN(0x1000);
 /* Critical OSC-Stuff */
 .critical_osc : 
 {
@@ -83,8 +83,5 @@ __oscs__end = .;
 	. = . + 512 * 4;
 	__runtime_stack_start = .;
 	
-	__critical_osc_end = .;
-	/* ASSERT( . - __critical_osc_start <= 0x10000 , "Permanent preloading section >64k");*/
-	
+	__critical_osc_end = .;	
 }
-. = ALIGN(0x100000);
