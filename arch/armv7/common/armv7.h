@@ -10,6 +10,8 @@
 
 #define CONFIG_ARMV7
 
+#ifdef CONFIG_CACHE_COLORING
 #define CONFIG_ARMV7_CACHE_COLORING
+#endif
 
 #endif /* ARCH_ARMV7_COMMON_ARMV7_H_ */
