@@ -26,7 +26,7 @@ void CacheColoring::prefetchDataToWay(uintptr_t start, uintptr_t end, uintptr_t 
 	uint32_t colorCount = getColorCount();
 	uint32_t pagesPerColor = getPagesPerColor();
 	// Force (downwards) alignment of component
-	start = start & ~(0xFFF);
+	start = start & ~(pageSize - 1);
 	uintptr_t currentPage = start;
 
 	uintptr_t colorOffset = 0;
@@ -41,22 +41,25 @@ void CacheColoring::prefetchDataToWay(uintptr_t start, uintptr_t end, uintptr_t 
 		// (way * pageSize * pagesPerColor) : constant offset for virtual "way" (color)
 		// (colorOffset * pageSize * colorCount) : offset in color
 		uintptr_t colorAdditionOffset = (way * pageSize * pagesPerColor) + pageOffset;
-//		DEBUG_STREAM(TAG,"Calculated offset: " << hex << colorAdditionOffset);
 		GenericMMU::sInstance->moveVirtualPageToPhysicalAddress(currentPage, mColorsStart + colorAdditionOffset, true);
 
+		// Increase source page pointer
 		currentPage += pageSize;
+
+		// Increase page counter
 		colorOffset++;
 
 		if (colorOffset % pagesPerColor == 0) {
+			// If pages per color is exhausted move to next space of the cache color
 			pageOffset += pageSize * pagesPerColor * colorCount;
 		} else {
+			// A contiguous page is still available for the color.
 			pageOffset += pageSize;
 		}
 	}
 }
 
 void CacheColoring::evictCacheWay(cacheways_t way, cycle_t* duration) {
-
 	// Return data from color to its original location
 
 	size_t pageSize = GenericMMU::sInstance->getPageSize();
@@ -70,7 +73,7 @@ void CacheColoring::evictCacheWay(cacheways_t way, cycle_t* duration) {
 #ifdef CONFIG_CACHE_DEBUG
 	DEBUG_STREAM(TAG,"Evict way: " << dec << (uint32_t)way << " with OSC: " << hex << " from: " << hex << start << " to: " << end);
 #endif
-	// Distribute all OSC pages to color pages
+	// Distribute all OSC pages back to their original physical address (virtual address == physical address)
 	while (currentPage < end) {
 		GenericMMU::sInstance->moveVirtualPageToPhysicalAddress(currentPage, currentPage, false);
 		currentPage += pageSize;
@@ -92,6 +95,7 @@ void CacheColoring::printCacheWayInformation() {
 }
 
 size_t CacheColoring::getCacheWaySize() {
+	// The size of a "virtual" cache way for th ecache management abstraction
 	return getColorSize();
 }
 
@@ -115,10 +119,12 @@ void CacheColoring::preloadSingleOSC(OSC* osc, cycle_t* duration) {
 #endif
 
 uint32_t CacheColoring::getColorCount() {
+	// Divide the LLC cache into colors
 	return getHWCacheWaySize() / (GenericMMU::sInstance->getPageSize() * getPagesPerColor());
 }
 
 uint32_t CacheColoring::getColorSize() {
+	// Calculate the size of a cache color.
 	return GenericMMU::sInstance->getPageSize() * getPagesPerColor() * getHWCacheWayCount();
 }
 

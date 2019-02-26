@@ -19,13 +19,40 @@ public:
 
 
 protected:
+	/**
+	 * HW implementations need to define how many hardware cache ways a system has for the shared level cache (LLC)
+	 * @return Number of LLC cache ways
+	 */
 	virtual uint32_t getHWCacheWayCount() = 0;
+
+	/**
+	 * HW implementations need to define how large one cache way of the LLC is
+	 * @return Size in bytes of the LLC cache ways
+	 */
 	virtual uint32_t getHWCacheWaySize() = 0;
+
+	/**
+	 * Controls how many pages per color the cache coloring uses. This can be used to prevent private
+	 * cache starvation. If you use to few the private caches are not used in full capacity.
+	 * @return
+	 */
 	virtual uint32_t getPagesPerColor() = 0;
 
+	/**
+	 * Calculates how many colors are available for the given system.
+	 * @return Number of cache colors available for the system
+	 */
 	uint32_t getColorCount();
+
+	/**
+	 *
+	 * @return Size in bytes of a cache color
+	 */
 	uint32_t getColorSize();
 
+	/**
+	 * Start address where the cache coloring system moves virtual pages to the PHYSICAL memory
+	 */
 	uintptr_t mColorsStart;
 
 	/**
@@ -39,8 +66,8 @@ protected:
 	virtual void prefetchDataToWay(uintptr_t start, uintptr_t end, uintptr_t textEnd, cacheways_t way, cycle_t *duration);
 
 	/**
-	 * Evicts data from a given cache way
-	 * @param way Way to evict data from
+	 * Evicts data from a given cache color by returning it back to its physical address
+	 * @param way Cache color ("virtual way") to evict data from
 	 */
 	virtual void evictCacheWay(cacheways_t way, cycle_t *duration);
 
@@ -53,8 +80,18 @@ protected:
 
 	virtual void printCacheWayInformation();
 
+	/**
+	 * Overriden method for the abstract cache management of CyPhOS. This is the size of a cache color for a "virtual" cache management way.
+	 * Not to be confused with the hardware cache way size
+	 * @return
+	 */
 	virtual size_t getCacheWaySize();
+
 #ifndef CONFIG_CACHE_CONTROL_EVICT_AFTER_USE
+	/**
+	 * Overrides the preload method to flush TLB before reusing a cache color.
+	 * Otherwise the data TLB data my be incoherent.
+	 */
 	virtual void preloadSingleOSC(OSC *osc, cycle_t *duration);
 #endif
 private:
