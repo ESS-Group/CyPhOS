@@ -118,8 +118,10 @@ void printMemory(uintptr_t start, uint64_t length) {
 
 	/* Set certain regions to cacheable */
 	DEBUG_STREAM(TAG, "Set OSC region to cacheable");
-	X86MMU::mInstance.setRangeCacheable((uintptr_t) &__critical_osc_start, (uintptr_t) &__critical_osc_end, false);
-	X86MMU::mInstance.setRangeCacheable((uintptr_t) &__oscs__start, (uintptr_t) &__oscs__end, false);
+#ifndef CONFIG_CACHE_COLORING
+	X86MMU::mInstance.setRangeCacheable((uintptr_t) &__critical_osc_start, (uintptr_t) &__critical_osc_end, true);
+	X86MMU::mInstance.setRangeCacheable((uintptr_t) &__oscs__start, (uintptr_t) &__oscs__end, true);
+#endif
 
 	X86MMU::mInstance.setRangeCacheable((uintptr_t) &__benchmark_results__start, (uintptr_t) &__benchmark_results__end, false);
 	X86MMU::mInstance.setRangeCacheable((uintptr_t) &__pagetable_start, (uintptr_t) &__pagetable_end, false);
