@@ -219,6 +219,7 @@ void PL310CacheManagement::setEnabled(bool enable) {
 }
 
 void PL310CacheManagement::invalidateSharedCache() {
+	ISB;
 	DSB;
 	dword_t regVal = READ_REGISTER(PL310_BASE_ADDRESS+PL310_INVALIDATE_BY_WAY);
 	regVal = 0xffff;
@@ -232,7 +233,10 @@ void PL310CacheManagement::invalidateSharedCache() {
 }
 
 void PL310CacheManagement::cleanSharedCache() {
+	ISB;
 	DSB;
+	// Clean data through the cache hierarchy l1->l2->memory
+	ARMV7CacheControl::pInstance.clean_Data_Caches();
 	dword_t regVal = READ_REGISTER(PL310_BASE_ADDRESS+PL310_CLEAN_BY_WAY);
 	regVal = 0xffff;
 	WRITE_REGISTER(PL310_BASE_ADDRESS+PL310_CLEAN_BY_WAY, regVal);
@@ -245,7 +249,10 @@ void PL310CacheManagement::cleanSharedCache() {
 }
 
 void PL310CacheManagement::cleanAndInvalidateSharedCache() {
+	ISB;
 	DSB;
+	// Clean data through the cache hierarchy l1->l2->memory
+	ARMV7CacheControl::pInstance.clean_Data_Caches();
 	dword_t regVal = READ_REGISTER(PL310_BASE_ADDRESS+PL310_CLEAN_AND_INVALIDATE_BY_WAY);
 	regVal = 0xffff;
 	WRITE_REGISTER(PL310_BASE_ADDRESS+PL310_CLEAN_AND_INVALIDATE_BY_WAY, regVal);
