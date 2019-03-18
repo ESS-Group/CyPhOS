@@ -13,6 +13,7 @@
 #include <common/ARM_common.h>
 #include <common/armhelper.h>
 
+#include <common/cyclecounter.h>
 
 
 #define TAG "PL310"
