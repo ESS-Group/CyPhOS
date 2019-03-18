@@ -21,6 +21,10 @@ CacheColoring::CacheColoring() : GenericCacheManagement() {
 }
 
 void CacheColoring::prefetchDataToWay(uintptr_t start, uintptr_t end, uintptr_t textEnd, cacheways_t way, cycle_t* duration) {
+#ifdef CONFIG_PROFILING_PRELOAD
+	cycle_t before = 0, after = 0;
+	RESET_READ_CYCLE_COUNTER(before);
+#endif
 	// Move all pages to corresponding color
 	size_t pageSize = GenericMMU::sInstance->getPageSize();
 	uint32_t colorCount = getColorCount();
@@ -57,9 +61,17 @@ void CacheColoring::prefetchDataToWay(uintptr_t start, uintptr_t end, uintptr_t 
 			pageOffset += pageSize;
 		}
 	}
+#ifdef CONFIG_PROFILING_PRELOAD
+	READ_CYCLE_COUNTER(after);
+	*duration = (after-before);
+#endif
 }
 
 void CacheColoring::evictCacheWay(cacheways_t way, cycle_t* duration) {
+#ifdef CONFIG_PROFILING_WRITEBACK
+	cycle_t before = 0, after = 0;
+	RESET_READ_CYCLE_COUNTER(before);
+#endif
 	// Return data from color to its original location
 
 	size_t pageSize = GenericMMU::sInstance->getPageSize();
@@ -78,6 +90,10 @@ void CacheColoring::evictCacheWay(cacheways_t way, cycle_t* duration) {
 		GenericMMU::sInstance->moveVirtualPageToPhysicalAddress(currentPage, currentPage, false);
 		currentPage += pageSize;
 	}
+#ifdef CONFIG_PROFILING_WRITEBACK
+	READ_CYCLE_COUNTER(after);
+	*duration = (after-before);
+#endif
 #ifdef CONFIG_CACHE_DEBUG
 	DEBUG_STREAM(TAG,"Finished evict");
 #endif
