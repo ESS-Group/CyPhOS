@@ -36,7 +36,7 @@ public:
 	/**
 	 * Method to print information of the current state of the managed cache.
 	 */
-	void printCacheWayInformation();
+	virtual void printCacheWayInformation();
 
 	void prefetchDataToWay(uintptr_t start, uintptr_t end, uintptr_t textEnd, cacheways_t way, cycle_t *duration);
 	void evictCacheWay(cacheways_t way, cycle_t *duration);

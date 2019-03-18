@@ -30,7 +30,7 @@ private:
 	/**
 	 * Use more than one page per color to enable more use of the private cache
 	 */
-	static constexpr uint32_t cPAGES_PER_COLOR = 4;
+	static constexpr uint32_t cPAGES_PER_COLOR = 2;
 
 #ifdef CONFIG_ARMV7_CACHE_COLORING
 	/**

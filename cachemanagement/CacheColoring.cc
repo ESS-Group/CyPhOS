@@ -105,6 +105,11 @@ void CacheColoring::evictMemoryRange(uintptr_t start, uint64_t size) {
 void CacheColoring::printCacheWayInformation() {
 	GenericCacheManagement::printCacheWayInformation();
 	LOG_OUTPUT_STREAM_START(TAG, "Cache coloring information:" << endl);
+#ifdef CONFIG_CACHE_CONTROL
+	LOG_OUTPUT_STREAM_CONTINUE(TAG, "SW-based page coloring cache management" << endl);
+#else
+	LOG_OUTPUT_STREAM_CONTINUE(TAG, "no SW-based page coloring cache management" << endl);
+#endif
 	LOG_OUTPUT_STREAM_CONTINUE(TAG, "Color size: " << hex << getColorSize() << endl);
 	LOG_OUTPUT_STREAM_CONTINUE(TAG, "Color count: " << hex << getColorCount() << endl);
 	LOG_OUTPUT_STREAM_END

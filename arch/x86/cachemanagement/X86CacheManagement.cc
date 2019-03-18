@@ -16,7 +16,6 @@
 
 namespace CacheManagement {
 
-
 X86CacheManagement::X86CacheManagement() : GenericCacheManagement() {
 	// FIXME this is a placeholder for systems without CAT
 	mCacheWayCount = 16;

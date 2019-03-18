@@ -47,6 +47,8 @@
 
 #include <testcomponents/UARTConsole.h>
 
+#include <testcomponents/ApplicationSystemInfo.h>
+
 #include "criticalOSCSymbols.h"
 
 extern "C" {
@@ -232,6 +234,9 @@ inline void setHoldingPen(int32_t val) {
 	 * peripheral devices.
 	 */
 	init_soc();
+
+	// Print initial cache information
+	EventHandling::EventHandler::pInstance.callOSCTrigger(&OSC_PREFIX(ApplicationSystemInfo)::ApplicationSystemInfo::trigger_printCacheManagementStats,0x0);
 
 	OSC_PREFIX(UARTConsole)::UARTConsole::pInstance.start();
 

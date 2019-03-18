@@ -22,6 +22,7 @@ public:
 
 	void evictMemoryRange(uintptr_t start, uint64_t size);
 	cycle_t getRAMAccessTimeThreshold() { return cRAMAccessTimeThreshold; }
+
 private:
 	static constexpr cycle_t cRAMAccessTimeThreshold = 100;
 	uint32_t mCLFlushSize;

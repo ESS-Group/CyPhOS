@@ -7,6 +7,7 @@
 
 #include <arch/armv7/driver/ARMv7CacheColoring.h>
 
+
 extern uintptr_t __cache_coloring_start;
 namespace CacheManagement {
 
@@ -38,6 +39,5 @@ uint32_t ARMv7CacheColoring::getPagesPerColor() {
 cycle_t ARMv7CacheColoring::getRAMAccessTimeThreshold() {
 	return cRAMAccessTimeThreshold;
 }
-
 
 } /* namespace CacheManagement */

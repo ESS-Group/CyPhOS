@@ -14,7 +14,7 @@
 #include <common/armhelper.h>
 
 #include <common/cyclecounter.h>
-
+#include <common/SyncOutput.h>
 
 #define TAG "PL310"
 #include <common/debug.h>
@@ -302,6 +302,56 @@ void PL310CacheManagement::printInformation() {
 #endif
 }
 
+void PL310CacheManagement::printCacheWayInformation() {
+#if !defined(CONFIG_ARMV7_CACHE_COLORING)
+	GenericCacheManagement::printCacheWayInformation();
+#endif
+	LOG_OUTPUT_STREAM_START(TAG, "PL310 info::" << endl);
+#ifdef CONFIG_CACHE_CONTROL
+	LOG_OUTPUT_STREAM_CONTINUE(TAG, "HW assisted cache management" << endl);
+#else
+	LOG_OUTPUT_STREAM_CONTINUE(TAG, "no HW assisted cache management" << endl);
+#endif
+
+#if !defined(CONFIG_ARMV7_CACHE_COLORING)
+	LOG_OUTPUT_STREAM_CONTINUE(TAG, "Cache ways available: " << dec << mCacheWayCount << endl);
+#endif
+	LOG_OUTPUT_STREAM_CONTINUE(TAG,"Printing PL310 Level2 controller information" << endl);
+	LOG_OUTPUT_STREAM_CONTINUE(TAG,"reg0_cache_id: " << hex
+			<< (uint32_t) READ_REGISTER(PL310_BASE_ADDRESS+PL310_CACHE_ID) << endl);
+	LOG_OUTPUT_STREAM_CONTINUE(TAG,"reg0_cache_type: " << hex
+			<< (uint32_t) READ_REGISTER(
+					PL310_BASE_ADDRESS+PL310_CACHE_TYPE)  << endl);
+	LOG_OUTPUT_STREAM_CONTINUE(TAG,"reg1_control: " << hex
+			<< (uint32_t) READ_REGISTER(
+					PL310_BASE_ADDRESS+PL310_CACHE_CONTROL)  << endl);
+	LOG_OUTPUT_STREAM_CONTINUE(TAG,"reg1_aux_control: " << hex
+			<< (uint32_t) READ_REGISTER(
+					PL310_BASE_ADDRESS+PL310_AUXILARY_CONTROL) << endl );
+	LOG_OUTPUT_STREAM_CONTINUE(TAG,"reg1_tag_ram_control: " << hex
+			<< (uint32_t) READ_REGISTER(
+					PL310_BASE_ADDRESS+PL310_TAG_RAM_CONTROL)  << endl);
+	LOG_OUTPUT_STREAM_CONTINUE(TAG,"reg1_data_ram_control: " << hex
+			<< (uint32_t) READ_REGISTER(
+					PL310_BASE_ADDRESS+PL310_DATA_RAM_CONTROL) << endl );
+	LOG_OUTPUT_STREAM_CONTINUE(TAG,"reg15_power_ctrl: " << hex
+			<< (uint32_t) READ_REGISTER(
+					PL310_BASE_ADDRESS+PL310_POWER_CONTROL)  << endl);
+	LOG_OUTPUT_STREAM_CONTINUE(TAG,"reg2_ev_counter_ctrl: " << hex
+				<< (uint32_t) READ_REGISTER(
+						PL310_BASE_ADDRESS+PL310_EVENT_COUNTER_CONTROL)  << endl);
+	LOG_OUTPUT_STREAM_CONTINUE(TAG,"reg2_ev_counter0_cfg: " << hex
+				<< (uint32_t) READ_REGISTER(
+						PL310_BASE_ADDRESS + PL310_EVENT_COUNTER_COUNT0_CFG)  << endl);
+	LOG_OUTPUT_STREAM_CONTINUE(TAG,"reg2_ev_counter1_cfg: " << hex
+				<< (uint32_t) READ_REGISTER(
+						PL310_BASE_ADDRESS + PL310_EVENT_COUNTER_COUNT1_CFG)  << endl);
+	LOG_OUTPUT_STREAM_CONTINUE(TAG,"reg15_prefetch_ctrl: " << hex
+				<< (uint32_t) READ_REGISTER(
+						PL310_BASE_ADDRESS + PL310_PREFETCH_CONTROL)  << endl);
+
+	LOG_OUTPUT_STREAM_END
+}
 
 void PL310CacheManagement::pl310_LockCacheWay(uint8_t way, bool lockdown) {
 	uint32_t offset = 0;

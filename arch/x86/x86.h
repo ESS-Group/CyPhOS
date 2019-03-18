@@ -40,6 +40,10 @@
 #else
 #define CONFIG_AMD64_CAT
 #endif
+#else
+// FIXME if no cache management is active use CAT as it robust enough to work on systems without CAT
+// Change to empty x86 cache management in the future
+#define CONFIG_AMD64_CAT
 #endif
 
 // DEBUG DEFINES

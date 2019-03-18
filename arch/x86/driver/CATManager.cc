@@ -118,7 +118,13 @@ void CATManager::createWayMapping() {
 
 void CATManager::printCacheWayInformation() {
 	GenericCacheManagement::printCacheWayInformation();
-	LOG_OUTPUT_STREAM_START(TAG, "CAT information:" << endl);
+	LOG_OUTPUT_STREAM_START(TAG, "Intel CAT::" << endl);
+#ifdef CONFIG_CACHE_CONTROL
+	LOG_OUTPUT_STREAM_CONTINUE(TAG, "HW assisted cache management" << endl);
+#else
+	LOG_OUTPUT_STREAM_CONTINUE(TAG, "no HW assisted cache management" << endl);
+#endif
+
 	LOG_OUTPUT_STREAM_CONTINUE(TAG, "Cache ways available: " << dec << mCacheWayCount << endl);
 	LOG_OUTPUT_STREAM_CONTINUE(TAG, "CAT capabilities: COS max: " << dec << (uint16_t)mCOSMax << " Shared bit mask " << hex << mSharedBitMask << " max bitmask length: " << (uint16_t)mBitmaskMaxLength << endl);
 	LOG_OUTPUT_STREAM_CONTINUE(TAG, "CAT capabilities: L3: " << dec << (uint16_t)getL3CATAvailable() << " L2: " << (uint16_t)getL2CATAvailable() << " MBA: " << (uint16_t)getMBAAvailable() << endl);

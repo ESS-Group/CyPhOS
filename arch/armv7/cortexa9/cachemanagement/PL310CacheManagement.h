@@ -38,6 +38,11 @@ public:
 
 	void printInformation();
 
+	/**
+	 * Method to print information of the current state of the managed cache.
+	 */
+	virtual void printCacheWayInformation();
+
 	static PL310CacheManagement sInstance;
 private:
 	static constexpr cacheways_t cCACHE_WAY_COUNT = 16;

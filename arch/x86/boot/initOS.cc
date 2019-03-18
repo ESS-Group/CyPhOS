@@ -53,6 +53,8 @@
 
 #include <common/cpuid.h>
 
+#include <testcomponents/ApplicationSystemInfo.h>
+
 #define TAG "INIT"
 
 extern "C" {
@@ -209,6 +211,9 @@ void printMemory(uintptr_t start, uint64_t length) {
 
 	// Start initial UARTConsole
 	OSC_PREFIX(UARTConsole)::UARTConsole::pInstance.start();
+
+	// Print initial cache information
+	EventHandling::EventHandler::pInstance.callOSCTrigger(&OSC_PREFIX(ApplicationSystemInfo)::ApplicationSystemInfo::trigger_printCacheManagementStats,0x0);
 
 	// Start event dispatching
 	activateDispatching();
