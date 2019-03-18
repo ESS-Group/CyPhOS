@@ -296,7 +296,7 @@ void MCP2515SPI::deactivateCANEvent(CANEvent *event) {
  * Resets the controller by sending the right SPI instruction.
  */
 void MCP2515SPI::resetController() {
-	DEBUG_STREAM(TAG,"Resetting MCP2515");
+//	DEBUG_STREAM(TAG,"Resetting MCP2515");
 	/* Prepare the output buffer the SPI driver */
 	mOutputBuffer[0] = MCP2515_INSTRUCTION_RESET;
 

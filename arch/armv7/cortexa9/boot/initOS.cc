@@ -240,8 +240,8 @@ inline void setHoldingPen(int32_t val) {
 
 	OSC_PREFIX(UARTConsole)::UARTConsole::pInstance.start();
 
-	StackPool::pInstance.dumpStacks();
-
+//	StackPool::pInstance.dumpStacks();
+	DEBUG_STREAM(TAG,"Boot up complete. Have fun ;-)");
 	/* This sets all the secondary cores free, which are idling in a loop. */
 #ifdef CONFIG_AUTOMATIC_MULTICORE_BOOT
 	holding_pen = 4711 + NR_CPUS;
@@ -249,7 +249,7 @@ inline void setHoldingPen(int32_t val) {
 #endif
 
 
-	DEBUG_STREAM(TAG,"Boot up complete. Have fun ;-)");
+
 
 	//MemoryAllocator::mInstance.printPagetable();
 #ifdef CONFIG_BAREMETAL_APPLICATION
