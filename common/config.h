@@ -24,7 +24,7 @@
  * This enables/disables the CyPhOS controlled cache management.
  * Only disable it for benchmarking purposes!
  */
-//#define CONFIG_CACHE_CONTROL
+#define CONFIG_CACHE_CONTROL
 
 /**
  * Defines if OSCs are directly evicted after use.
@@ -38,7 +38,7 @@
 #define CONFIG_CACHE_PLDW_FOR_INSTRUCTION
 
 // Enable SW-based page coloring
-//#define CONFIG_PAGE_COLORING
+#define CONFIG_PAGE_COLORING
 
 #ifdef CONFIG_PAGE_COLORING
 //#define CONFIG_SET_ALL_PAGES_CACHEABLE

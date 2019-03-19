@@ -47,7 +47,7 @@ void GenericCacheManagement::preloadOSC(OSC* osc, EventHandling::Trigger *trigge
 
 	mLock.unlock();
 
-	*duration = duration_sum;
+	*duration += duration_sum;
 }
 
 
