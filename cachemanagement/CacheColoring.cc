@@ -12,6 +12,8 @@
 #include <common/debug.h>
 #include <common/SyncOutput.h>
 
+#include <common/cyclecounter.h>
+
 #include <driver/GenericMMU.h>
 
 namespace CacheManagement {
