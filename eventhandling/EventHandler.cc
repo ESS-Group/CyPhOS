@@ -83,7 +83,7 @@ static EventHandling::Trigger* profiling_included_triggers[] = {
 	 * Saves SMI Count before profiling to compare
 	 */
 	static uint32_t sSMIDiscards[NR_CPUS];
-#if defined(CONFIG_PROFILING_EXECUTION) | defined(CONFIG_PROFILING_PRELOAD) | defined(CONFIG_PROFILING_PRELOAD_OVERHEAD)
+#if defined(CONFIG_PROFILING_EXECUTION) | defined(CONFIG_PROFILING_PRELOAD) | defined(CONFIG_PROFILING_PRELOAD_OVERHEAD) | defined(CONFIG_PROFILING_WRITEBACK)
 	static uint32_t sSMICounts[NR_CPUS];
 #endif
 #endif
