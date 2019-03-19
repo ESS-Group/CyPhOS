@@ -37,11 +37,11 @@ void X86CacheManagement::prefetchDataToWay(uintptr_t start, uintptr_t end, uintp
 	RESET_READ_CYCLE_COUNTER(before);
 #endif
 	__asm__ __volatile__ ("0: \n"
-			"prefetchw (%[start])\n"
+			"movq (%[start]),%%rax\n"
 			"add %[flushSize],%[start]\n"
 			"cmp %[end],%[start]\n"
 			"jb 0b\n"
-			"mfence\n"::[start]"r"(start), [end]"r"(end), [flushSize]"r"((uint64_t)mCLFlushSize):"memory");
+			"mfence\n"::[start]"r"(start), [end]"r"(end), [flushSize]"r"((uint64_t)mCLFlushSize):"memory","rax");
 #ifdef CONFIG_PROFILING_PRELOAD
 	READ_CYCLE_COUNTER(after);
 	*duration = (after-before);

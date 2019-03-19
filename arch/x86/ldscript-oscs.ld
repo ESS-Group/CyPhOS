@@ -83,9 +83,7 @@ __oscs__end = .;
 	
 	*(".critical_data")
 	*(".eventHandling*")
-    *(".text*")
-	*(".data*")
-	*(".bss")
+
 
 	/* Full-descending stack for cores (please be cautious with offsets) */
     . = ALIGN(0x1000);
