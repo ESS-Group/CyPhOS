@@ -82,9 +82,10 @@ __oscs__end = .;
 	__NS_CRITICAL_OSC__bss_end = .;
 	
 	*(".critical_data")
-	/**(".text")
-	*(".data")
-	*(".bss") */
+	*(".eventHandling*")
+    *(".text*")
+	*(".data*")
+	*(".bss")
 
 	/* Full-descending stack for cores (please be cautious with offsets) */
     . = ALIGN(0x1000);
