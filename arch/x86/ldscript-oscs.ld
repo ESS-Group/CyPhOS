@@ -13,7 +13,9 @@ __oscs__end = .;
 	
 	./build/common/Queue.o(".text*")
 
-	./build/eventhandling/*.o("*")
+	./build/eventhandling/EventQueue.o(".text*")
+	./build/eventhandling/EventPriorityQueue.o(".text*")
+	./build/eventhandling/EventHandler.o(".text")
 
 	./build/eventhandling/StackPool.o(".text*")
 	./build/interrupts/InterruptDispatcher.o(".text*")
@@ -23,51 +25,67 @@ __oscs__end = .;
 	./build/arch/x86/core/SystemMode.o(".text")
 	
 	/* Cache management */
+	./build/cachemanagement/GenericCacheManagement.o(".text")
+	./build/arch/x86/cachemanagement/X86CacheManagement.o(".text")
 	./build/arch/x86/driver/CATManager.o(".text")
 	./build/arch/x86/driver/X86MMU.o(".text")
 	./build/driver/GenericMMU.o(".text")
+	./build/arch/x86/cachemanagement/X86CacheColoring.o(".text")
 	./build/cachemanagement/CacheColoring.o(".text")
 	
 	/* Arch specific interrupt handler */
+	./build/arch/x86/interrupts/interrupt_handler.o(".text")
 	
 	./build/common/baremetal.o(".text")
 	__critical_osc_text_end = .;
 	
-	./build/arch/x86/driver/SMPManager.o("*")
-	./build/arch/x86/common/X86System.o("*")
-
+	./build/eventhandling/EventHandler.o(".*data*")
+	
+	./build/eventhandling/StackPool.o(".*data*")
 
 	./build/interrupts/InterruptDispatcher.o(".data*")
 	./build/arch/x86/core/SystemMode.o(".*data*")
  	
+ 	./build/eventhandling/MultiQueuePriorityStrategy.o(".*data*")
 
 	./build/common/RandomGenerator.o(".data")
+	./build/cachemanagement/GenericCacheManagement.o(".data")
+	./build/arch/x86/cachemanagement/X86CacheManagement.o(".data")
+	./build/arch/x86/driver/CATManager.o(".data")
+	./build/arch/x86/driver/X86MMU.o(".data")
+	./build/driver/GenericMMU.o(".data")
+	./build/arch/x86/cachemanagement/X86CacheColoring.o(".data")
+	./build/cachemanagement/CacheColoring.o(".data")
 
-	./build/arch/x86/driver/CATManager.o(".data*")
-	./build/arch/x86/driver/X86MMU.o(".data*")
-	./build/driver/GenericMMU.o(".data*")
-
-	./build/arch/x86/interrupts/*.o("*")
+	./build/arch/x86/interrupts/interrupt_handler.o(".data")
 
 	__NS_CRITICAL_OSC__bss_start = .;
+	./build/eventhandling/EventHandler.o(".bss")
 	./build/interrupts/InterruptDispatcher.o(".bss")
-
+	./build/eventhandling/StackPool.o(".bss")
+	./build/eventhandling/MultiQueuePriorityStrategy.o(".bss")
+	
 	./build/common/RandomGenerator.o(".bss")
 
+	./build/cachemanagement/GenericCacheManagement.o(".bss")
+	./build/arch/x86/cachemanagement/X86CacheManagement.o(".bss")
 	./build/arch/x86/driver/CATManager.o(".bss")
 	./build/arch/x86/driver/X86MMU.o(".bss")
 	./build/driver/GenericMMU.o(".bss")
+	./build/arch/x86/cachemanagement/X86CacheColoring.o(".bss")
+	./build/cachemanagement/CacheColoring.o(".bss")
 
 
-	./build/arch/x86/cachemanagement/*.o("*")
-	./build/cachemanagement/*.o("*")
-	
 	./build/arch/x86/core/SystemMode.o(".bss")
 	./build/core/SystemMode.o(".bss")
+	./build/arch/x86/interrupts/interrupt_handler.o(".bss")
 	__NS_CRITICAL_OSC__bss_end = .;
 	
 	*(".critical_data")
 	*(".eventHandling*")
+    *(".text*")
+	*(".data*")
+	*(".bss")
 
 	/* Full-descending stack for cores (please be cautious with offsets) */
     . = ALIGN(0x1000);
