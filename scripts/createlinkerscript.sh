@@ -61,7 +61,7 @@ do
 		LINKER_SCRIPT="${LINKER_SCRIPT}\n    ${objectfile}(\".text*\")"
 		LINKER_SCRIPT="${LINKER_SCRIPT}\n    __${NS}_text_end = .;"
 		LINKER_SCRIPT="${LINKER_SCRIPT}\n    . = ALIGN(0x4);"
-		LINKER_SCRIPT="${LINKER_SCRIPT}\n    ${objectfile}(\".data*\")"
+		LINKER_SCRIPT="${LINKER_SCRIPT}\n    ${objectfile}(\".*data*\")"
 		LINKER_SCRIPT="${LINKER_SCRIPT}\n    __${NS}_bss_start = .;"
 		LINKER_SCRIPT="${LINKER_SCRIPT}\n    ${objectfile}(\".bss\")"
 		LINKER_SCRIPT="${LINKER_SCRIPT}\n    __${NS}_bss_end = .;"
