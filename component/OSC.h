@@ -98,7 +98,7 @@ class CLASS_NAME : public OSC, INHERITANCE { \
 
 #define OSC_PREFIX(NAME) NS_OSC_##NAME##_OSC
 
-#define SECTION_CRITICAL_DATA __attribute__ ((section (".critical_data")))
+#define SECTION_CRITICAL_DATA __attribute__ ((section (".critical_section")))
 
 // Forward declaration
 namespace EventHandling {

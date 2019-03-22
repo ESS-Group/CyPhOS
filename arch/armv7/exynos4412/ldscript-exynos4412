@@ -11,7 +11,6 @@ SECTIONS
     .ARM.exidx   : { *(.ARM.exidx* .gnu.linkonce.armexidx.*) }
     __exidx_end = .;
 	
-
 	INCLUDE arch/armv7/cortexa9/ldscript-oscs.ld
 	
     /* Constructors */
@@ -27,7 +26,6 @@ SECTIONS
        KEEP (*(".ctor"))
        PROVIDE_HIDDEN (__init_array_end = .);
     }
-
 	
 	INCLUDE arch/armv7/cortexa9/ldscript-end.ld
 }

@@ -1,6 +1,6 @@
 # Event handling code
 EVENTHANDLING_DIR=eventhandling/
-EVENTHANDLING_SOURCES_CC = EventHandler.cc EventPriorityQueue.cc EventQueue.cc StackPool.cc MultiQueuePriorityStrategy.cc SingleQueuePriorityStrategy.cc
+EVENTHANDLING_SOURCES_CC = EventHandler.cc EventPriorityQueue.cc EventQueue.cc StackPool.cc MultiQueuePriorityStrategy.cc
 # FIXME make SchedulingStrategy configurable
 # FifoStrategy.cc MultiFifoStrategy.cc 
 EVENTHANDLING_SOURCES_ASM = 

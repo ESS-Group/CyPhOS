@@ -678,7 +678,7 @@ bool EventHandler::tryTaskLock(EventTask *task) {
 
 	// Try to lock the main OSC first
 	if (task->trigger->pDestinationOSC == 0) {
-		DEBUG_STREAM("Eventhandling","FAIL! OSC is null");
+		DEBUG_STREAM(TAG,"FAIL! OSC is null, task: " << hex << task << " trigger: " << task->trigger);
 	}
 
 	// Flush TLB to see newest page mapping

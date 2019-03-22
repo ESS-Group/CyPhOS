@@ -4,6 +4,10 @@ SECTIONS
 
 	INCLUDE arch/armv7/cortexa9/ldscript-boot.ld
 	
+	__exidx_start = .;
+    .ARM.exidx   : { *(.ARM.exidx* .gnu.linkonce.armexidx.*) }
+    __exidx_end = .;
+	
 	INCLUDE arch/armv7/cortexa9/ldscript-oscs.ld
 	
     /* Constructors */
@@ -21,12 +25,6 @@ SECTIONS
        KEEP (*(".ctor"))
        PROVIDE_HIDDEN (__init_array_end = .);
     }
-
-	
-	/*.not_cacheable :
-	{
-		./build/baremetal/MemoryProfilingSpace.o("*")
-	}*/
 	
 	INCLUDE arch/armv7/cortexa9/ldscript-end.ld
 }

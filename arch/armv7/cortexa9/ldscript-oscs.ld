@@ -9,82 +9,24 @@ __oscs__end = .;
 .critical_osc : 
 {
 	__critical_osc_start = .;
-	./build/arch/armv7/interrupts/arm_jumptable.oS("*")
+	/* Include generic critical OSC */
+	INCLUDE ldscript-osc-generic.ld
 
-	./build/arch/armv7/interrupts/first_stage_handler_critical.oS("*")
+	./build/arch/armv7/interrupts/*.o("*")
+	./build/arch/armv7/interrupts/*.oS("*")
+	./build/arch/armv7/eventhandling/*.o("*")
+	./build/arch/armv7/eventhandling/*.oS("*")
+	./build/arch/armv7/driver/ARMMMU.o("*")
+	./build/arch/armv7/cortexa9/cachemanagement/*.o("*")
+	./build/arch/armv7/driver/ARMV7CacheControl.o("*")
+	./build/arch/armv7/driver/ARMv7CacheColoring.o("*")
+	./build/arch/armv7/driver/ARMV7CacheControl.oS("*")
 
-  	./build/arch/armv7/interrupts/first_stage_handler.o(".text")
-	./build/common/Queue.o(".text*")
-
-	./build/eventhandling/EventQueue.o(".text*")
-	./build/eventhandling/EventPriorityQueue.o(".text*")
-	./build/eventhandling/EventHandler.o(".text")
-
-	./build/eventhandling/StackPool.o(".text*")
-	./build/cachemanagement/GenericCacheManagement.o(".text")
-	./build/interrupts/InterruptDispatcher.o(".text*")
-
- 	./build/eventhandling/MultiQueuePriorityStrategy.o(".text")
-	./build/common/RandomGenerator.o(".text")
-	
-	./build/core/SystemMode.o(".text")
-	
-	__critical_osc_text_end = .;
-	
-	./build/arch/armv7/interrupts/first_stage_handler.o(".data")
-		
-	./build/eventhandling/EventHandler.o(".*data*")
-	./build/arch/armv7/eventhandling/EventHandler.oS("*")
-	
-	./build/eventhandling/StackPool.o(".*data*")
-	
-	./build/cachemanagement/GenericCacheManagement.o(".*data*")
-	
-	
-	./build/interrupts/InterruptDispatcher.o(".data*")
-	./build/core/SystemMode.o(".*data*")
-
- 	
- 	./build/eventhandling/MultiQueuePriorityStrategy.o(".*data*")
-
-	./build/common/RandomGenerator.o(".data")
-
-	__NS_CRITICAL_OSC__bss_start = .;
-	./build/eventhandling/EventHandler.o(".bss")
-
-	./build/interrupts/InterruptDispatcher.o(".bss")
-	./build/arch/armv7/interrupts/first_stage_handler.o(".bss")
-	./build/eventhandling/StackPool.o(".bss")
-	./build/eventhandling/MultiQueuePriorityStrategy.o(".bss")
-	
-	./build/cachemanagement/GenericCacheManagement.o(".bss")
-	./build/common/RandomGenerator.o(".bss")
-
-	./build/core/SystemMode.o(".bss")
-	__NS_CRITICAL_OSC__bss_end = .;
-	
-
-	. = ALIGN(0x10000);
-	./build/arch/armv7/driver/ARMMMU.o(".text")
-	./build/arch/armv7/driver/ARMMMU.o(".*data*")
-	./build/arch/armv7/driver/ARMMMU.o(".bss")
-	
-	*(".critical_data")
-	*(".text")
 	
 	. = ALIGN(0x8);
 	__irq_stack_end = .;
 	. = . + 512 * 4;
 	__irq_stack_start = .;
-	
-	/* Full-descending stack for cores (please be cautious with offsets) */
-    . = ALIGN(0x8);
-	__runtime_stack_end = .;
-	. = . + 512 * 4;
-	__runtime_stack_start = .;
-	
 	__critical_osc_end = .;
-	/* ASSERT( . - __critical_osc_start <= 0x10000 , "Permanent preloading section >64k");*/
-	
 }
 . = ALIGN(0x100000);
