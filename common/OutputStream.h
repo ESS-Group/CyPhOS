@@ -10,8 +10,6 @@
 
 #include <common/types.h>
 
-#define DEBUG_BUFFER_SIZE 160
-
 
 class OutputStream {
 
@@ -47,7 +45,8 @@ public:
 
 	void flush();
 protected:
-	char mCharBuffer[DEBUG_BUFFER_SIZE];
+	static constexpr uint32_t cBUFFER_SIZE = 256;
+	char mCharBuffer[cBUFFER_SIZE];
 	uint32_t mBufferPosition;
 
 

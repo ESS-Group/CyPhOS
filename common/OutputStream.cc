@@ -20,7 +20,7 @@ void OutputStream::flush() {
 
 void OutputStream::putc(char c) {
 	mCharBuffer[mBufferPosition++] = c;
-	if (mBufferPosition == DEBUG_BUFFER_SIZE || (c == '\n')) {
+	if (mBufferPosition == cBUFFER_SIZE || (c == '\n')) {
 		flush();
 		mBufferPosition = 0;
 	}
