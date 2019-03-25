@@ -51,6 +51,7 @@ PL310CacheManagement::PL310CacheManagement()
 
 #if !defined(CONFIG_ARMV7_CACHE_COLORING)
 void PL310CacheManagement::prefetchDataToWay(uintptr_t start, uintptr_t end, uintptr_t textEnd, cacheways_t way, cycle_t* duration) {
+	pPL310Lock.lock();
 #ifdef CONFIG_CACHE_DEBUG
 	DEBUG_STREAM(TAG,"Preload from: " << hex << start << " to textEnd: " << textEnd << " end: " << end << " in way: " << dec << way);
 #endif
@@ -129,9 +130,11 @@ void PL310CacheManagement::prefetchDataToWay(uintptr_t start, uintptr_t end, uin
 #else
 	pl310_LockCacheWay_All_Master(way, true);
 #endif
+	pPL310Lock.unlock();
 }
 
 void PL310CacheManagement::evictCacheWay(cacheways_t way, cycle_t* duration) {
+	pPL310Lock.lock();
 #ifdef CONFIG_ARM_STANDBY_CACHE_WAYS
 	// Add offset to cache way as first ways are reserved for standby usage
 	way += NR_CPUS;
@@ -146,6 +149,7 @@ void PL310CacheManagement::evictCacheWay(cacheways_t way, cycle_t* duration) {
 	READ_CYCLE_COUNTER(after);
 	*duration = (after-before);
 #endif
+	pPL310Lock.unlock();
 }
 
 

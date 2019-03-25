@@ -63,6 +63,8 @@ private:
 
 	void pl310_LockCacheWay(uint8_t way, bool lockdown);
 	void pl310_LockCacheWay_All_Master(uint8_t way, bool lockdown);
+
+	Spinlock pPL310Lock;
 protected:
 	size_t getCacheWaySize() {return cCACHE_WAY_SIZE;}
 

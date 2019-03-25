@@ -62,7 +62,7 @@ public:
 		if(pCurrentPointer == cResultStorageSize || full) {
 			if(!full){
 				full = true;
-				SYNC_OUTPUT_STREAM("RESULTCONTAINER", "Buffer full!" << endl);
+				DEBUG_STREAM("RESULTCONTAINER", "Buffer full!" << endl);
 			}
 			return;
 		}

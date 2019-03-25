@@ -142,5 +142,9 @@ void X86MMU::mapVirtualPageToPhysicalAddress(uintptr_t virtualPage, uintptr_t ph
 	pte->pwt = !cacheable;
 	pte->pcd = !cacheable;
 
-	FLUSH_TLB_ADDRESS(virtualPage);
+	flushTLB();
+}
+
+uintptr_t X86MMU::getDummyPageAddress() {
+	return cDUMMY_PAGE + cPAGESIZE * getCPUID();
 }

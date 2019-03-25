@@ -153,6 +153,8 @@ private:
 
 	uint32_t mStandbyMask[NR_CPUS];
 
+	Spinlock mCATLock;
+
 protected:
 	virtual size_t getCacheWaySize();
 

@@ -12,13 +12,11 @@
 
 GenericMMU *GenericMMU::sInstance;
 
-#define CONFIG_WIPE_OLD_PAGE
+//#define CONFIG_WIPE_OLD_PAGE
 
 GenericMMU::GenericMMU() {
 	sInstance = this;
 }
-
-
 
 void GenericMMU::moveVirtualPageToPhysicalAddress(uintptr_t virtualPage, uintptr_t physicalPage, bool cacheable) {
 #ifdef CONFIG_DEBUG_MMU
@@ -28,8 +26,6 @@ void GenericMMU::moveVirtualPageToPhysicalAddress(uintptr_t virtualPage, uintptr
 	// Get architectural dummy page address that is available as a temporary (virtual) page store
 	uintptr_t dummyPageAddress = getDummyPageAddress();
 
-#ifdef CONFIG_WIPE_OLD_PAGE
-#endif
 	// Get physical address that is mapped to the current virtual address
 	uintptr_t originalPhysicalAddress = getPhysicalAddressForVirtual(virtualPage);
 	mapVirtualPageToPhysicalAddress(virtualPage, originalPhysicalAddress, !cacheable);
@@ -71,7 +67,6 @@ void GenericMMU::moveVirtualPageToPhysicalAddress(uintptr_t virtualPage, uintptr
 	mapVirtualPageToPhysicalAddress(virtualPage, physicalPage, cacheable);
 
 
-
 #ifdef CONFIG_WIPE_OLD_PAGE
 	// Map the virtual dummy page to the source physical page, to be able to clean it
 	// FIXME remove if system is stable. This is not necessary for a stable system, just
@@ -95,11 +90,11 @@ void GenericMMU::moveVirtualPageToPhysicalAddress(uintptr_t virtualPage, uintptr
 #endif
 
 	// Return dummy page to its original mapping
-	mapVirtualPageToPhysicalAddress(0x0,0x0, false);
+	mapVirtualPageToPhysicalAddress(dummyPageAddress,dummyPageAddress, false);
 #else
 	// No need to wipe dummy page, just return it
 	if (dummyPage) {
-		mapVirtualPageToPhysicalAddress(0x0,0x0, false);
+		mapVirtualPageToPhysicalAddress(dummyPageAddress,dummyPageAddress, false);
 	}
 #endif
 

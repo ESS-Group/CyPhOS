@@ -81,24 +81,40 @@ void ARMMMU::activateMMU() {
 }
 
 void ARMMMU::flushTLB() {
+//	__asm__ __volatile__ (
+//			"ISB\n"
+//			"DSB\n"
+//			"MOV     r0, #0\n"
+//			"MCR p15, 0, r0, c8, c3, 0\n"
+//			"DSB\n"
+//			"ISB": : : "memory");
 	__asm__ __volatile__ (
-			"ISB\n"
-			"DSB\n"
-			"MOV     r0, #0\n"
-			"MCR p15, 0, r0, c8, c3, 0\n"
-			"DSB\n"
-			"ISB": : : "memory");
+				"ISB\n"
+				"DSB\n"
+				"MOV     r0, #0\n"
+				"MCR p15, 0, r0, c8, c7, 0\n"
+				"DSB\n"
+				"ISB": : : "memory");
+	CacheManagement::ARMV7CacheControl::pInstance.invalidateInstructionCache();
+
 }
 
 void ARMMMU::flushTLBWithAddress(uintptr_t address) {
 	// FIXME
+//	__asm__ __volatile__ (
+//			"ISB\n"
+//			"DSB\n"
+//			"MOV     r0, #0\n"
+//			"MCR p15, 0, r0, c8, c3, 0\n"
+//			"DSB\n"
+//			"ISB": : : "memory");
 	__asm__ __volatile__ (
-			"ISB\n"
-			"DSB\n"
-			"MOV     r0, #0\n"
-			"MCR p15, 0, r0, c8, c3, 0\n"
-			"DSB\n"
-			"ISB": : : "memory");
+				"ISB\n"
+				"DSB\n"
+				"MOV     r0, #0\n"
+				"MCR p15, 0, r0, c8, c7, 0\n"
+				"DSB\n"
+				"ISB": : : "memory");
 
 	CacheManagement::ARMV7CacheControl::pInstance.invalidateInstructionCache();
 }
@@ -257,11 +273,12 @@ void ARMMMU::mapVirtualPageToPhysicalAddress(uintptr_t virtualPage, uintptr_t ph
 #endif
 
 	// FIXME
-	__asm__ __volatile__ (
-			"ISB\n"
-			"DSB\n"
-			"MOV     r0, #0\n"
-			"MCR p15, 0, r0, c8, c3, 0\n": : : "memory");
+	flushTLB();
 
 	CacheManagement::ARMV7CacheControl::pInstance.invalidateInstructionCache();
+}
+
+
+uintptr_t ARMMMU::getDummyPageAddress() {
+	return cDUMMY_PAGE_ADDRESS + cPAGE_SIZE * getCPUID();
 }

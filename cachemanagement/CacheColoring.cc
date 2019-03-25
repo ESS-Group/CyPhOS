@@ -31,7 +31,6 @@ void CacheColoring::prefetchDataToWay(uintptr_t start, uintptr_t end, uintptr_t 
 #ifdef CONFIG_CACHE_DEBUG
 	DEBUG_STREAM(TAG,"Copy data to way: " << hex << way << " from: " << start << " to: " << end);
 #endif
-
 	// Move all pages to corresponding color
 	size_t pageSize = GenericMMU::sInstance->getPageSize();
 	uint32_t colorCount = getColorCount();
@@ -129,6 +128,9 @@ size_t CacheColoring::getCacheWaySize() {
 
 #ifndef CONFIG_CACHE_CONTROL_EVICT_AFTER_USE
 void CacheColoring::preloadSingleOSC(OSC* osc, cycle_t* duration) {
+#ifdef CONFIG_CACHE_DEBUG
+	DEBUG_STREAM(TAG,"preloadSingleOSC:" << hex << osc);
+#endif
 	// This should only be necessary if no evict after use is enabled because the TLB of one processor
 	// could be incoherent to another ones.
 	// Flush all TLB entries of OSC to ensure data coherence

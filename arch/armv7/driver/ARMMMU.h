@@ -52,7 +52,7 @@ public:
 	static ARMMMU pInstance;
 private:
 	static constexpr size_t cPAGE_SIZE = 4096;
-	uintptr_t cDUMMY_PAGE_ADDRESS = 0x0;
+	static constexpr uintptr_t cDUMMY_PAGE_ADDRESS = 0x0;
 
 	static memory_map_entry_t memoryMap[];
 
@@ -68,7 +68,7 @@ private:
 
 protected:
 	size_t getPageSize() {return cPAGE_SIZE;}
-	uintptr_t getDummyPageAddress() {return cDUMMY_PAGE_ADDRESS;}
+	virtual uintptr_t getDummyPageAddress();
 
 	uintptr_t getPhysicalAddressForVirtual(uintptr_t virtualAddress);
 	void mapVirtualPageToPhysicalAddress(uintptr_t virtualPage, uintptr_t physicalPage, bool cacheable);

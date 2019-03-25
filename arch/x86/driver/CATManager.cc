@@ -132,21 +132,25 @@ void CATManager::printCacheWayInformation() {
 }
 
 void CATManager::prefetchDataToWay(uintptr_t start, uintptr_t end, uintptr_t textEnd, cacheways_t way, cycle_t *duration) {
+	mCATLock.lock();
 	// Enable correct way
 	enableWayExclusive(way);
 	// Call super class prefetching
 	X86CacheManagement::prefetchDataToWay(start, end, textEnd, way, duration);
 	// Disable way
 	disableAllWays();
+	mCATLock.unlock();
 }
 
 void CATManager::evictCacheWay(cacheways_t way, cycle_t *duration) {
+	mCATLock.lock();
 	// Enable correct way
 	enableWayExclusive(way);
 	// Call super class eviction
 	X86CacheManagement::evictCacheWay(way, duration);
 	// Disable way
 	disableAllWays();
+	mCATLock.unlock();
 }
 
 

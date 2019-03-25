@@ -34,7 +34,7 @@ public:
 
 	virtual void flushTLBWithAddress(uintptr_t address);
 protected:
-	virtual uintptr_t getDummyPageAddress() {return cDUMMY_PAGE;};
+	virtual uintptr_t getDummyPageAddress();
 
 private:
 	static constexpr uintptr_t cDUMMY_PAGE = 0x0;

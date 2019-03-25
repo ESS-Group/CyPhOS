@@ -9,6 +9,8 @@
 #include <common/armhelper.h>
 #include <common/baremetal.h>
 #include <common/debug.h>
+
+#include <eventhandling/EventHandler.h>
 #define TAG "EXCEPTION"
 
 volatile bool exceptionActive = false;
@@ -35,6 +37,7 @@ void restart_system();
 }
 
 void printCrashContext(dword_t *sp) {
+	exceptionActive = true;
 	DEBUG_STREAM(TAG,"PC: " << hex << *sp);
 	DEBUG_STREAM(TAG,"SP: " << hex << *(sp+1));
 	DEBUG_STREAM(TAG,"LR: " << hex << *(sp+2));
@@ -53,6 +56,9 @@ void printCrashContext(dword_t *sp) {
 	DEBUG_STREAM(TAG,"R11 " << hex << *(sp+14));
 	DEBUG_STREAM(TAG,"R12: " << hex << *(sp+15));
 
+	EventHandling::EventHandler::pInstance.printCurrentEventTask();
+
+
 	DEBUG_STREAM(TAG,"REBOOTING SYSTEM! :'-(");
 	BUSY_WAITING_LONG
 	;
@@ -62,9 +68,10 @@ void printCrashContext(dword_t *sp) {
  * Exception handler for the reset exception
  */
 void exception_reset_c(void* stackpointer) {
-	exceptionActive = true;
 	DEBUG_STREAM(TAG, "Reset exception");
-	printCrashContext((dword_t*) stackpointer);
+	if (!exceptionActive) {
+		printCrashContext((dword_t*) stackpointer);
+	}
 	restart_system();
 }
 
@@ -72,9 +79,10 @@ void exception_reset_c(void* stackpointer) {
  * Exception handler for the undefined instruction exception
  */
 void exception_undefined_instruction_c(void* stackpointer) {
-	exceptionActive = true;
 	DEBUG_STREAM(TAG, "undefined instruction exception");
-	printCrashContext((dword_t*) stackpointer);
+	if (!exceptionActive) {
+		printCrashContext((dword_t*) stackpointer);
+	}
 	restart_system();
 }
 
@@ -82,9 +90,10 @@ void exception_undefined_instruction_c(void* stackpointer) {
  * Exception handler for the supervisor exception
  */
 void exception_supervisor_call_c(void* stackpointer) {
-	exceptionActive = true;
 	DEBUG_STREAM(TAG, "supervisor call exception");
-	printCrashContext((dword_t*) stackpointer);
+	if (!exceptionActive) {
+		printCrashContext((dword_t*) stackpointer);
+	}
 	restart_system();
 }
 
@@ -92,9 +101,10 @@ void exception_supervisor_call_c(void* stackpointer) {
  * Exception handler for the prefetch abort exception
  */
 void exception_prefetch_abort_c(void* stackpointer) {
-	exceptionActive = true;
 	DEBUG_STREAM(TAG, "prefetch abort exception");
-	printCrashContext((dword_t*) stackpointer);
+	if (!exceptionActive) {
+		printCrashContext((dword_t*) stackpointer);
+	}
 	restart_system();
 }
 
@@ -103,9 +113,10 @@ void exception_prefetch_abort_c(void* stackpointer) {
  * It will check first, if it was just caused by a access flag fault and can be fixed
  */
 void exception_data_abort_c(void* stackpointer) {
-	exceptionActive = true;
 	DEBUG_STREAM(TAG, "data abort exception");
-	printCrashContext((dword_t*) stackpointer);
+	if (!exceptionActive) {
+		printCrashContext((dword_t*) stackpointer);
+	}
 	restart_system();
 }
 
@@ -113,9 +124,10 @@ void exception_data_abort_c(void* stackpointer) {
  * Exception handler for the hypervisor call exception
  */
 void exception_hypervisor_c(void* stackpointer) {
-	exceptionActive = true;
 	DEBUG_STREAM(TAG, "Hypervisor exception");
-	printCrashContext((dword_t*) stackpointer);
+	if (!exceptionActive) {
+		printCrashContext((dword_t*) stackpointer);
+	}
 	restart_system();
 }
 
@@ -123,5 +135,7 @@ void exception_hypervisor_c(void* stackpointer) {
  * Exception handler for the fast interrupt exception
  */
 void exception_fiq_interrupt_c() {
+	DEBUG_STREAM(TAG, "FIQ exception");
 
+	restart_system();
 }
