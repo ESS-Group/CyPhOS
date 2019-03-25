@@ -1,19 +1,18 @@
-. = ALIGN(0x100000);
+. = ALIGN(0x10000);
 __oscs__start = .;
 INCLUDE OSC.ld
 __oscs__end = .;	
 
-/* Align to page granularity */
-. = ALIGN(0x100000);
+/* Align to cache way size (512kB) */
+. = ALIGN(0x10000);
 /* Critical OSC-Stuff */
 .critical_osc : 
 {
 	__critical_osc_start = .;
-	/* Include generic critical OSC */
-	INCLUDE ldscript-osc-generic.ld
+	./build/arch/armv7/interrupts/arm_jumptable.oS(".text")
+	./build/arch/armv7/interrupts/first_stage_handler_critical.oS(".text")
+	./build/arch/armv7/interrupts/first_stage_handler.o(".text")
 
-	./build/arch/armv7/interrupts/*.o(".*text*")
-	./build/arch/armv7/interrupts/*.oS(".*text*")
 	./build/arch/armv7/eventhandling/*.o(".*text*")
 	./build/arch/armv7/eventhandling/*.oS(".*text*")
 	./build/arch/armv7/driver/ARMMMU.o(".*text*")
@@ -21,6 +20,7 @@ __oscs__end = .;
 	./build/arch/armv7/driver/ARMV7CacheControl.o(".*text*")
 	./build/arch/armv7/driver/ARMv7CacheColoring.o(".*text*")
 	./build/arch/armv7/driver/ARMV7CacheControl.oS(".*text*")
+	./build/arch/armv7/core/SystemMode.o(".*text*")
 
 	./build/arch/armv7/interrupts/*.o(".*data*")
 	./build/arch/armv7/interrupts/*.oS(".*data*")
@@ -31,6 +31,7 @@ __oscs__end = .;
 	./build/arch/armv7/driver/ARMV7CacheControl.o(".*data*")
 	./build/arch/armv7/driver/ARMv7CacheColoring.o(".*data*")
 	./build/arch/armv7/driver/ARMV7CacheControl.oS(".*data*")
+	./build/arch/armv7/core/SystemMode.o(".*data*")
 		
 	./build/arch/armv7/interrupts/*.o(".bss")
 	./build/arch/armv7/interrupts/*.oS(".bss")
@@ -41,7 +42,10 @@ __oscs__end = .;
 	./build/arch/armv7/driver/ARMV7CacheControl.o(".bss")
 	./build/arch/armv7/driver/ARMv7CacheColoring.o(".bss")
 	./build/arch/armv7/driver/ARMV7CacheControl.oS(".bss")
+	./build/arch/armv7/core/SystemMode.o(".bss")
 	
+	/* Include generic critical OSC */
+	INCLUDE ldscript-osc-generic.ld
 	
 	. = ALIGN(0x8);
 	__irq_stack_end = .;

@@ -1,7 +1,6 @@
 #include <common/ARM_common.h>
 
-.code 32
-.section .irq_handler,"ax"
+.text
 
 
 .global exception_irq_interrupt

@@ -7,6 +7,8 @@
 ./build/eventhandling/EventQueue.o(".text*")
 ./build/eventhandling/StackPool.o(".text*")
 ./build/interrupts/InterruptDispatcher.o(".text*")
+./build/core/SystemMode.o(".text*")
+
 
 ./build/common/RandomGenerator.o(".*text*")
 
@@ -34,6 +36,7 @@ __critical_osc_text_end = .;
 ./build/cachemanagement/GenericCacheManagement.o(".*data*")
 ./build/driver/GenericMMU.o(".*data*")
 ./build/cachemanagement/CacheColoring.o(".*data*")
+./build/core/SystemMode.o(".*data*")
 
 
 __NS_CRITICAL_OSC__bss_start = .;
@@ -56,7 +59,7 @@ __NS_CRITICAL_OSC__bss_end = .;
 *(".critical_section")
 
 /* Full-descending stack for cores (please be cautious with offsets) */
-. = ALIGN(0x1000);
+. = ALIGN(0x8);
 __runtime_stack_end = .;
 . = . + 0x1000 * 4;
 __runtime_stack_start = .;

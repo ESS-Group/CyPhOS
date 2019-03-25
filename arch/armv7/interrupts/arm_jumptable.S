@@ -1,5 +1,4 @@
-.section EXCEPTION_VECTOR_TABLE
-
+.text
 /*
  * Labels to get start and end address for later memmove
  */

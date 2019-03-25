@@ -27,7 +27,7 @@ activateDispatching:
 	AND R0,R0,#0x3
 // Multiply constant
 // FIXME define this offset somewhere
-	MOV R1,#512
+	MOV R1,#1024
 // Calculate the offset
 	MUL R2,R1,R0
 // Load the stack start address

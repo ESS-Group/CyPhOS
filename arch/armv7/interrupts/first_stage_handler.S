@@ -1,7 +1,6 @@
 #include <common/ARM_common.h>
 
-.code 32
-.section .irq_handler,"ax"
+.text
 
 .global exception_reset
 .global exception_undefined_instruction
@@ -168,3 +167,32 @@ exception_hypervisor:
 
 
 exception_fiq_interrupt:
+	/* Save general registers */
+	STMFD sp!,{r0-r12}
+
+	/* The LR of the usr/sys mode and the SPSR still needs saving */
+	/* Change to system mode to get the LR and SP */
+	MSR CPSR_c,#(CPU_MODE_SYS | CPSR_I_BIT | CPSR_F_BIT)
+
+	MOV R0,LR
+	MOV R1,SP
+
+	MSR CPSR_c,#(CPU_MODE_HYP | CPSR_I_BIT | CPSR_F_BIT)
+
+	/* Save old linkregister */
+	PUSH {R0}
+
+	/* Save old stackpointer */
+	PUSH {R1}
+
+	/*  Save the return address (where the code was interrupted) */
+	SUB LR,LR,#8
+	/* Push the register to the user-mode stack */
+	PUSH {LR}
+
+	/* Save the stackpointer for the exception handling debug output */
+	MOV R0,SP
+
+
+	/* Just branch to C hypervisor call handler and stop execution */
+	B exception_fiq_interrupt_c;
