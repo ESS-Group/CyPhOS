@@ -59,7 +59,7 @@ public:
 
 	void initializeTimer();
 
-	uint64_t getHardwareTicks();
+	virtual uint64_t getHardwareTicks();
 
 	/* Static instance variable */
 	static CortexA9GlobalTimer pInstance;

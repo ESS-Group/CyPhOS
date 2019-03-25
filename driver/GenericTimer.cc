@@ -24,17 +24,19 @@
 
 MEMBER_OF_OSC_BEGIN(Timer)
 GenericTimer* GenericTimer::pInstance;
+OSC *GenericTimer::pTimerOSC;
 
 
 
 
-GenericTimer::GenericTimer() :  mTimerInterval(1), mTicks(0) {
+GenericTimer::GenericTimer(OSC *osc) :  mTimerInterval(1), mTicks(0) {
 	for ( uint32_t i = 0; i< cTimerPoolSize; i++) {
 		mTimerConnections[i].pType = EventHandling::Event::TIMER_EVENT;
 		mOneshotEventPool.enqueue(&mTimerConnections[i]);
 		mPeriodicEventPool.enqueue(&mTimerConnections[i + (cTimerPoolSize)]);
 	}
 	GenericTimer::pInstance = this;
+	GenericTimer::pTimerOSC = osc;
 }
 
 EventHandling::TimerEvent *GenericTimer::setPeriodicEvent(EventHandling::Trigger *trigger, uint32_t interval) {
@@ -153,7 +155,7 @@ EventHandling::TimerEvent *GenericTimer::setOneshotEvent(EventHandling::Trigger 
 void GenericTimer::handleTick() {
 
 #ifdef CONFIG_GENERIC_TIMER_DEBUG
-//	DEBUG_STREAM(TAG,"HandleTick");
+	DEBUG_STREAM(TAG,"HandleTick");
 #endif
 
 	// Lock the oneshot queue

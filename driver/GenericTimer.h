@@ -23,7 +23,7 @@ class GenericTimer {
 	friend class EventHandling::EventHandler;
 
 public:
-	GenericTimer();
+	GenericTimer(OSC *osc);
 	/**
 	 * Enqueues an timer event for the given OSC and destination method destFunc in an us interval.
 	 * @param osc OSC to be called on timer run down
@@ -70,6 +70,8 @@ public:
 
 
 	static GenericTimer *pInstance;
+
+	static OSC *pTimerOSC;
 
 	/**
 	 * Returns the system uptime in milliseconds

@@ -41,7 +41,7 @@ SECTION_CRITICAL_DATA OSC* GenericTimer::trigger_Interrupt_Deps[] = { nullptr };
 SECTION_CRITICAL_DATA EventHandling::Trigger GenericTimer::trigger_Interrupt((OSC*) &CortexA9GlobalTimer::pInstance,
 		(void (OSC::*)(dword_t))&CortexA9GlobalTimer::handleInterrupt, (OSC**)&CortexA9GlobalTimer::trigger_Interrupt_Deps, CONFIG_PRIORITY_TIMER, 0x00);
 
-CortexA9GlobalTimer::CortexA9GlobalTimer(ARMClockManagement* clockMgr) {
+CortexA9GlobalTimer::CortexA9GlobalTimer(ARMClockManagement* clockMgr) : GenericTimer(this) {
 	pClockManagement = clockMgr;
 
 	/* Initialize timer */
@@ -196,6 +196,8 @@ void CortexA9GlobalTimer::initializeTimer() {
 }
 
 uint64_t CortexA9GlobalTimer::getHardwareTicks() {
+	DEBUG_STREAM(TAG,"Get HW ticks");
+	DEBUG_STREAM(TAG,"pTimerValue:" << dec << pTimerValue);
 	uint64_t retVal = READ_REGISTER(GLOBAL_TIMER_COUNTER_REGISTER_0) | ((uint64_t) (READ_REGISTER(GLOBAL_TIMER_COUNTER_REGISTER_1)) << 32);
 	return retVal / pTimerValue;
 }

@@ -76,7 +76,7 @@ BEGIN_OSC_IMPLEMENTATION(ApplicationSystemInfo,ApplicationSystemInfo)
 
 ApplicationSystemInfo ApplicationSystemInfo::mInstance;
 
-SECTION_CRITICAL_DATA OSC* ApplicationSystemInfo::trigger_deps[] = {&OSC_PREFIX(ConsoleBuffer)::ConsoleBuffer::mInstance,nullptr};
+SECTION_CRITICAL_DATA OSC* ApplicationSystemInfo::trigger_deps[] = {OSC_PREFIX(Timer)::GenericTimer::pTimerOSC,&OSC_PREFIX(ConsoleBuffer)::ConsoleBuffer::mInstance,nullptr};
 
 SECTION_CRITICAL_DATA DEFINE_TRIGGER(ApplicationSystemInfo,printEventDispatcherStats,ApplicationSystemInfo::mInstance,trigger_deps, EventHandling::Trigger::cMIN_Priority + 600);
 

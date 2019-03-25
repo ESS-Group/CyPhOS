@@ -21,7 +21,7 @@ SECTION_CRITICAL_DATA EventHandling::Trigger GenericTimer::trigger_Interrupt((OS
 
 APICTimer APICTimer::pInstance;
 
-APICTimer::APICTimer() : GenericTimer() {
+APICTimer::APICTimer() : GenericTimer(this) {
 	InterruptDispatcher::pInstance.registerEvent(HW_INT_LOCAL_APIC_TIMER, &trigger_Interrupt);
 }
 

@@ -23,7 +23,7 @@ BEGIN_OSC_IMPLEMENTATION(ApplicationPeriodicTest,ApplicationPeriodicTest)
 ApplicationPeriodicTest ApplicationPeriodicTest::mInstance;
 
 
-SECTION_CRITICAL_DATA OSC* ApplicationPeriodicTest::trigger_deps[] = {&OSC_PREFIX(ConsoleBuffer)::ConsoleBuffer::mInstance,nullptr};
+SECTION_CRITICAL_DATA OSC* ApplicationPeriodicTest::trigger_deps[] = {OSC_PREFIX(Timer)::GenericTimer::pTimerOSC,&OSC_PREFIX(ConsoleBuffer)::ConsoleBuffer::mInstance,nullptr};
 
 SECTION_CRITICAL_DATA DEFINE_TRIGGER(ApplicationPeriodicTest,startPeriodic,ApplicationPeriodicTest::mInstance, trigger_deps, EventHandling::Trigger::cMIN_Priority);
 SECTION_CRITICAL_DATA DEFINE_TRIGGER(ApplicationPeriodicTest,stopPeriodic,ApplicationPeriodicTest::mInstance, trigger_deps, EventHandling::Trigger::cMIN_Priority);
