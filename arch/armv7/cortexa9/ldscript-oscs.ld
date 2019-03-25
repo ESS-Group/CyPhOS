@@ -12,16 +12,36 @@ __oscs__end = .;
 	/* Include generic critical OSC */
 	INCLUDE ldscript-osc-generic.ld
 
-	./build/arch/armv7/interrupts/*.o("*")
-	./build/arch/armv7/interrupts/*.oS("*")
-	./build/arch/armv7/eventhandling/*.o("*")
-	./build/arch/armv7/eventhandling/*.oS("*")
-	./build/arch/armv7/driver/ARMMMU.o("*")
-	./build/arch/armv7/cortexa9/cachemanagement/*.o("*")
-	./build/arch/armv7/driver/ARMV7CacheControl.o("*")
-	./build/arch/armv7/driver/ARMv7CacheColoring.o("*")
-	./build/arch/armv7/driver/ARMV7CacheControl.oS("*")
+	./build/arch/armv7/interrupts/*.o(".*text*")
+	./build/arch/armv7/interrupts/*.oS(".*text*")
+	./build/arch/armv7/eventhandling/*.o(".*text*")
+	./build/arch/armv7/eventhandling/*.oS(".*text*")
+	./build/arch/armv7/driver/ARMMMU.o(".*text*")
+	./build/arch/armv7/cortexa9/cachemanagement/*.o(".*text*")
+	./build/arch/armv7/driver/ARMV7CacheControl.o(".*text*")
+	./build/arch/armv7/driver/ARMv7CacheColoring.o(".*text*")
+	./build/arch/armv7/driver/ARMV7CacheControl.oS(".*text*")
 
+	./build/arch/armv7/interrupts/*.o(".*data*")
+	./build/arch/armv7/interrupts/*.oS(".*data*")
+	./build/arch/armv7/eventhandling/*.o(".*data*")
+	./build/arch/armv7/eventhandling/*.oS(".*data*")
+	./build/arch/armv7/driver/ARMMMU.o(".*data*")
+	./build/arch/armv7/cortexa9/cachemanagement/*.o(".*data*")
+	./build/arch/armv7/driver/ARMV7CacheControl.o(".*data*")
+	./build/arch/armv7/driver/ARMv7CacheColoring.o(".*data*")
+	./build/arch/armv7/driver/ARMV7CacheControl.oS(".*data*")
+		
+	./build/arch/armv7/interrupts/*.o(".bss")
+	./build/arch/armv7/interrupts/*.oS(".bss")
+	./build/arch/armv7/eventhandling/*.o(".bss")
+	./build/arch/armv7/eventhandling/*.oS(".bss")
+	./build/arch/armv7/driver/ARMMMU.o(".bss")
+	./build/arch/armv7/cortexa9/cachemanagement/*.o(".bss")
+	./build/arch/armv7/driver/ARMV7CacheControl.o(".bss")
+	./build/arch/armv7/driver/ARMv7CacheColoring.o(".bss")
+	./build/arch/armv7/driver/ARMV7CacheControl.oS(".bss")
+	
 	
 	. = ALIGN(0x8);
 	__irq_stack_end = .;
