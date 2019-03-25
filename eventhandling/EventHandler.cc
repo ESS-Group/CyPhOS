@@ -255,14 +255,9 @@ void EventHandler::eventTaskFinished(void *stackPointer) {
 	// FIXME move profiling to CacheManagment
 #endif
 	cycle_t cycles_evict = 0;
-#ifdef CONFIG_PAGE_COLORING
-	pDataMovementLock.lock();
-#endif
+
 	// Call the cache management to evict the component from the cache
 	CacheManagement::GenericCacheManagement::sInstance->evictOSC(eventtask, &cycles_evict);
-#ifdef CONFIG_PAGE_COLORING
-	pDataMovementLock.unlock();
-#endif
 
 #ifdef CONFIG_PROFILING_WRITEBACK
 	if (profileTrigger) {
@@ -344,14 +339,10 @@ void EventHandler::eventTaskFinished(void *stackPointer) {
 
 #endif
 
-#ifdef CONFIG_PAGE_COLORING
-	pDataMovementLock.lock();
-#endif
+
 	// Call the cache management to preload the OSC to the cache
 	CacheManagement::GenericCacheManagement::sInstance->preloadOSC(destOSC,event->trigger,&cycles_preload);
-#ifdef CONFIG_PAGE_COLORING
-	pDataMovementLock.unlock();
-#endif
+
 #ifdef CONFIG_PROFILING_PRELOAD_OVERHEAD
 	READ_CYCLE_COUNTER(cycles_preload);
 	cycles_preload -= cycles_preload_before;
@@ -433,15 +424,10 @@ void EventHandler::dispatching() {
 		// CAUTION: This needs to be synchronized in some way because the interrupt "handler" also enqueues events.
 		Core::SystemMode::mInstance.disableInterrupts();
 
-#ifdef CONFIG_PAGE_COLORING
-	pDataMovementLock.lock();
-#endif
+
 
 		task = pScheduling->getEvent(cpuNR);
 
-#ifdef CONFIG_PAGE_COLORING
-	pDataMovementLock.unlock();
-#endif
 
 
 		// Check if an event is available to be dispatched

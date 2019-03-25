@@ -227,15 +227,6 @@ private:
 	 */
 	Spinlock pInterruptTasksLock;
 
-#ifdef CONFIG_PAGE_COLORING
-	/**
-	 * Lock to prevent incoherent address translation during page moving.
-	 * All OSC spinlocks need to be accessible during tryTaskLock and unlockTask.
-	 * Prevent race conditions during preloading / eviction of OSCs
-	 */
-	Spinlock pDataMovementLock;
-#endif
-
 	/**
 	 * Pointer to selected scheduling strategy
 	 */
