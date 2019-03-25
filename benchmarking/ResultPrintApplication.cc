@@ -10,6 +10,7 @@
 #include <common/debug.h>
 
 #define TAG "ResultPrintApplication"
+#include "ResultContainer.h"
 
 BEGIN_OSC_IMPLEMENTATION(ResultPrintApplication,ResultPrintApplication)
 

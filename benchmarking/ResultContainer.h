@@ -12,6 +12,9 @@
 
 #include <common/SyncOutput.h>
 
+#include <eventhandling/EventHandler.h>
+#include "ResultPrintApplication.h"
+
 enum ResultType{
 	OSC_PRELOAD,
 	OSC_WRITEBACK,
@@ -41,7 +44,7 @@ struct BenchmarkResult {
 
 class ResultContainer {
 private:
-	static constexpr uint32_t cResultStorageSize = 500000;
+	static constexpr uint32_t cResultStorageSize = 3000;
 	const char *convertTypeToString(ResultType type);
 
 
@@ -62,9 +65,11 @@ public:
 		if(pCurrentPointer == cResultStorageSize || full) {
 			if(!full){
 				full = true;
-				DEBUG_STREAM("RESULTCONTAINER", "Buffer full!" << endl);
+				EventHandling::EventHandler::pInstance.callOSCTrigger(&OSC_PREFIX(ResultPrintApplication)::ResultPrintApplication::trigger_PrintResultContainer,0x0);
 			}
 			return;
+		} else if(pCurrentPointer != 0 && (pCurrentPointer % 1000) == 0) {
+			DEBUG_STREAM("RESULTCONTAINER", "Results: " << dec << pCurrentPointer);
 		}
 		pStorage[pCurrentPointer].duration = value;
 		pStorage[pCurrentPointer].id = id;

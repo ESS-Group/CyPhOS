@@ -10,7 +10,7 @@
 
 #include <testcomponents/ConsoleApplication.h>
 
-#include "ResultContainer.h"
+
 
 BEGIN_DECLARE_OSC_INHERIT(ResultPrintApplication,ResultPrintApplication, public ConsoleApplication)
 public:
