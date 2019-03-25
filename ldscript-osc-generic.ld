@@ -1,4 +1,9 @@
 /* Text segments */
+. = ALIGN(0x1000);
+./build/cachemanagement/GenericCacheManagement.o(".*text*")
+./build/cachemanagement/GenericCacheManagement.o(".*data*")
+./build/cachemanagement/GenericCacheManagement.o(".bss")
+
 *(".eventHandling*")
 ./build/eventhandling/EventHandler.o(".text*")
 ./build/eventhandling/EventPriorityQueue.o(".text*")
@@ -12,7 +17,7 @@
 
 ./build/common/RandomGenerator.o(".*text*")
 
-./build/cachemanagement/GenericCacheManagement.o(".*text*")
+
 
 /* Cache management */
 ./build/driver/GenericMMU.o(".*text*")
@@ -33,7 +38,7 @@ __critical_osc_text_end = .;
 ./build/eventhandling/MultiQueuePriorityStrategy.o(".*data*")
 
 ./build/common/RandomGenerator.o(".*data*")
-./build/cachemanagement/GenericCacheManagement.o(".*data*")
+
 ./build/driver/GenericMMU.o(".*data*")
 ./build/cachemanagement/CacheColoring.o(".*data*")
 ./build/core/SystemMode.o(".*data*")
@@ -47,7 +52,7 @@ __NS_CRITICAL_OSC__bss_start = .;
 
 ./build/common/RandomGenerator.o(".bss")
 
-./build/cachemanagement/GenericCacheManagement.o(".bss")
+
 ./build/driver/GenericMMU.o(".bss")
 ./build/cachemanagement/CacheColoring.o(".bss")
 

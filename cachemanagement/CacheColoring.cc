@@ -27,6 +27,11 @@ void CacheColoring::prefetchDataToWay(uintptr_t start, uintptr_t end, uintptr_t 
 	cycle_t before = 0, after = 0;
 	RESET_READ_CYCLE_COUNTER(before);
 #endif
+
+#ifdef CONFIG_CACHE_DEBUG
+	DEBUG_STREAM(TAG,"Copy data to way: " << hex << way << " from: " << start << " to: " << end);
+#endif
+
 	// Move all pages to corresponding color
 	size_t pageSize = GenericMMU::sInstance->getPageSize();
 	uint32_t colorCount = getColorCount();

@@ -31,6 +31,9 @@ GenericCacheManagement::GenericCacheManagement() : mCacheWayCount(0), mCriticalW
 
 void GenericCacheManagement::preloadOSC(OSC* osc, EventHandling::Trigger *trigger, cycle_t *duration) {
 	mLock.lock();
+#ifdef CONFIG_CACHE_DEBUG
+	DEBUG_STREAM(TAG,"Preload OSC: " << hex << osc << " trigger: " << trigger);
+#endif
 	cycle_t duration_sum = 0;
 	cycle_t duration_temp = 0;
 
@@ -53,7 +56,7 @@ void GenericCacheManagement::preloadOSC(OSC* osc, EventHandling::Trigger *trigge
 
 
 void GenericCacheManagement::preloadCriticalData(void* start, void* end, void* textEnd) {
-	mLock.lock();
+//	mLock.lock();
 #ifdef CONFIG_CACHE_DEBUG
 	DEBUG_STREAM(TAG, "Preloading Critical data from " << hex << start << " to " << end << " text segment ending at: " << textEnd);
 #endif
@@ -93,7 +96,7 @@ void GenericCacheManagement::preloadCriticalData(void* start, void* end, void* t
 		}
 	}
 
-	mLock.unlock();
+//	mLock.unlock();
 }
 
 
@@ -253,6 +256,10 @@ void GenericCacheManagement::preloadSingleOSC(OSC *osc, cycle_t *duration) {
 	size_t cacheWaySize = getCacheWaySize();
 	cycle_t duration_temp = 0;
 
+#ifdef CONFIG_CACHE_DEBUG
+	DEBUG_STREAM(TAG,"Preloading single OSC: " << hex << osc);
+#endif
+
 	/* Determine OSC properties */
 	uintptr_t oscStart = (uintptr_t)osc->getOSCStart();
 	uintptr_t oscEnd = (uintptr_t)osc->getOSCEnd();
@@ -263,6 +270,9 @@ void GenericCacheManagement::preloadSingleOSC(OSC *osc, cycle_t *duration) {
 	// Will be set if part is already in cache (to support partial eviction)
 	bool skipPreload = false;
 	while (oscStart < oscEnd) {
+#ifdef CONFIG_CACHE_DEBUG
+	DEBUG_STREAM(TAG,"Preloading single OSC: " << hex << oscStart);
+#endif
 		/* First get the cache way which is the least recently used one */
 		cacheways_t lruCacheWay = getLRUWay(osc,oscStart);
 		if(lruCacheWay == cMaxCacheWays) {
