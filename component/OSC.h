@@ -30,7 +30,6 @@ class CLASS_NAME : public OSC { \
 			void *getOSCStart(); \
 			void *getOSCTextEnd(); \
 			void *getOSCEnd(); \
-			Spinlock *getLock();
 
 
 #define BEGIN_DECLARE_OSC_INHERIT(NAME,CLASS_NAME,INHERITANCE) \
@@ -43,7 +42,6 @@ class CLASS_NAME : public OSC, INHERITANCE { \
 			void *getOSCStart(); \
 			void *getOSCTextEnd(); \
 			void *getOSCEnd(); \
-			Spinlock *getLock();
 
 #define OSC_FUNC_T(FUNC_NAME) void (OSC::*FUNC_NAME)(dword_t)
 
@@ -59,7 +57,6 @@ class CLASS_NAME : public OSC, INHERITANCE { \
 //__NS_OSC_###NAME###_OSC_end describes the end of compiled code, but we want to cache the complete component
 #define BEGIN_OSC_IMPLEMENTATION(NAME,CLASS_NAME) \
 		namespace NS_OSC_##NAME##_OSC{ \
-		SECTION_CRITICAL_DATA Spinlock NS_OSC_##NAME##_LOCK; \
 		void *CLASS_NAME::getOSCStart() { \
 			return &__NS_OSC_##NAME##_OSC_start; \
 		} \
@@ -68,9 +65,6 @@ class CLASS_NAME : public OSC, INHERITANCE { \
 		} \
 		void *CLASS_NAME::getOSCEnd() { \
 			return &__NS_OSC_##NAME##_OSC_end; \
-		} \
-		Spinlock *CLASS_NAME::getLock() { \
-			return &NS_OSC_##NAME##_LOCK; \
 		}
 
 #define BEGIN_OSC_IMPLEMENTATION_SECONDARY(NAME,CLASS_NAME) \
@@ -84,10 +78,8 @@ class CLASS_NAME : public OSC, INHERITANCE { \
 		} \
 		void *CLASS_NAME::getOSCEnd() { \
 			return &__NS_OSC_##NAME##_OSC_end; \
-		} \
-		Spinlock *CLASS_NAME::getLock() { \
-			return &NS_OSC_##NAME##_LOCK; \
 		}
+
 
 #define END_OSC_IMPLEMENTATION }
 
@@ -122,9 +114,6 @@ public:
 	virtual void *getOSCStart() = 0;
 	virtual void *getOSCTextEnd() = 0;
 	virtual void *getOSCEnd() = 0;
-
-	virtual Spinlock *getLock() = 0;
-
 
 
 

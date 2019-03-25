@@ -246,6 +246,8 @@ private:
 	 */
 	EventTask *pActiveEventTask[NR_CPUS];
 
+	Spinlock pActiveTaskLock;
+
 	/**
 	 * Activates an OSC for the specific event.
 	 * If the event was preempted before then this will resume its context.

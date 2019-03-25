@@ -239,9 +239,6 @@ void EventHandler::eventTaskFinished(void *stackPointer) {
 	}
 #endif
 
-	/* Reset active EventTask for the CPU */
-	pActiveEventTask[cpuID] = nullptr;
-
 	/*
 	 * Reset the stackpointer of the event here. Especially important
 	 * for interrupt events, as they are not recreated every time.
@@ -385,9 +382,6 @@ void EventHandler::eventTaskFinished(void *stackPointer) {
 	DEBUG_STREAM(TAG, "activateOSC Eventtask: " << event);
 #endif
 
-	// Set the active event for this core
-	pActiveEventTask[cpuID] = event;
-
 	// Increase global dispatched event counter
 	pEventDispatchCounter++;
 	// Increase local dispatched event counter
@@ -448,7 +442,7 @@ void EventHandler::dispatching() {
 #ifdef CONFIG_PAGE_COLORING
 	pDataMovementLock.unlock();
 #endif
-		Core::SystemMode::mInstance.enableInterrupts();
+
 
 		// Check if an event is available to be dispatched
 		if (nullptr != task) {
@@ -457,11 +451,11 @@ void EventHandler::dispatching() {
 			pIdleTime[cpuNR] += (idleStop - idleStart);
 #endif
 
-			// Disable interrupts, as this system works non-preemptible
-			Core::SystemMode::mInstance.disableInterrupts();
 			// Activate the event task
 			activateOSC(task);
 		}
+
+		Core::SystemMode::mInstance.enableInterrupts();
 
 		// Allow the CPU to sleep for interrupts & exceptions
 		WAIT_EVENT;
@@ -679,88 +673,73 @@ bool EventHandler::tryTaskLock(EventTask *task) {
 	// Try to lock the main OSC first
 	if (task->trigger->pDestinationOSC == 0) {
 		DEBUG_STREAM(TAG,"FAIL! OSC is null, task: " << hex << task << " trigger: " << task->trigger);
+		while(1){}
 	}
 
-	// Flush TLB to see newest page mapping
-	GenericMMU::sInstance->flushTLBWithAddress((uintptr_t)task->trigger->pDestinationOSC);
-	bool success = task->trigger->pDestinationOSC->getLock()->take_if_free();
+	pActiveTaskLock.lock();
 
-	if (success) {
-#ifdef CONFIG_DEBUG_LOCKING
-		DEBUG_STREAM(TAG,"LOCK: "  << hex << task->trigger->pDestinationOSC);
-#endif
+	// Check for task's OSC and all its dependencies if the component is already in use
+	for (cpu_t cpu = 0; cpu < NR_CPUS; cpu++) {
+		if (pActiveEventTask[cpu] == nullptr) {
+			// No task active on CPU -> skip
+			continue;
+		}
 
-		uint32_t successCount = 0;
-		OSC **dep = task->trigger->pDeps;
-
-		while (*dep != nullptr) {
-			GenericMMU::sInstance->flushTLBWithAddress((uintptr_t)*dep);
-//			GenericMMU::sInstance->flushTLB();
-			success = (*dep)->getLock()->take_if_free();
-			if (!success) {
-				uint32_t revertCount = 0;
-				// We failed to lock one dependency
-				dep = task->trigger->pDeps;
-				// Revert locks we already got
-				while (*dep != nullptr && revertCount != successCount) {
-					DEBUG_STREAM(TAG,"UNLOCK: " << hex << (*dep));
-					(*dep)->getLock()->unlock();
-					revertCount++;
-					dep++;
-				}
-
-				// Unlock main OSC
-#ifdef CONFIG_DEBUG_LOCKING
-				DEBUG_STREAM(TAG,"UNLOCK: " << hex << task->trigger->pDestinationOSC);
-#endif
-				task->trigger->pDestinationOSC->getLock()->unlock();
+		// Check task's OSC with other CPUs main OSC
+		if (task->trigger->pDestinationOSC == pActiveEventTask[cpu]->trigger->pDestinationOSC) {
+			pActiveTaskLock.unlock();
+			return false;
+		}
+		// Check other CPU's dependencies
+		OSC **otherDep = pActiveEventTask[cpu]->trigger->pDeps;
+		while (*otherDep != nullptr) {
+			if(*otherDep == task->trigger->pDestinationOSC) {
+				pActiveTaskLock.unlock();
 				return false;
-			} else {
-#ifdef CONFIG_DEBUG_LOCKING
-				DEBUG_STREAM(TAG,"LOCK: " << hex << (*dep));
-#endif
+			}
+			otherDep++;
+		}
 
+
+		// Check this task's dependencies
+		OSC **dep = task->trigger->pDeps;
+		while (*dep != nullptr) {
+			if ((*dep) == pActiveEventTask[cpu]->trigger->pDestinationOSC) {
+				pActiveTaskLock.unlock();
+				return false;
 			}
 
+			// Check other CPU's dependencies
+			otherDep = pActiveEventTask[cpu]->trigger->pDeps;
+			while (*otherDep != nullptr) {
+				if(*otherDep == *dep) {
+					pActiveTaskLock.unlock();
+					return false;
+				}
+				otherDep++;
+			}
 			dep++;
-			successCount++;
 		}
 	}
-	return success;
+
+	pActiveEventTask[getCPUID()] = task;
+#ifdef CONFIG_DISPATCHER_DEBUG
+	DEBUG_STREAM(TAG,"Locked task: " << hex << task << " with OSC: " << task->trigger->pDestinationOSC);
+#endif
+
+	pActiveTaskLock.unlock();
+	return true;
 }
 
 void EventHandler::unlockTask(EventTask *task) {
-#ifdef CONFIG_PAGE_COLORING
-	pDataMovementLock.lock();
+	pActiveTaskLock.lock();
+
+	pActiveEventTask[getCPUID()] = nullptr;
+#ifdef CONFIG_DISPATCHER_DEBUG
+	DEBUG_STREAM(TAG,"Unlocked task: " << hex << task << " with OSC: " << task->trigger->pDestinationOSC);
 #endif
 
-	// Flush TLB to see newest page mapping
-	GenericMMU::sInstance->flushTLB();
-#ifdef CONFIG_DEBUG_LOCKING
-	DEBUG_STREAM(TAG,"Unlocking EventTask: " << hex << task);
-#endif
-
-	// Unlock dependencies first
-	OSC **dep = task->trigger->pDeps;
-	while ((*dep) != nullptr) {
-#ifdef CONFIG_DEBUG_LOCKING
-		DEBUG_STREAM(TAG,"UNLOCK: " << hex << (*dep));
-		DEBUG_STREAM(TAG,"LOCK OBJECT: " << hex << (*dep)->getLock() << endl);
-#endif
-		(*dep)->getLock()->unlock();
-
-		dep++;
-	}
-
-#ifdef CONFIG_DEBUG_LOCKING
-	DEBUG_STREAM(TAG,"UNLOCK: " << hex << task->trigger->pDestinationOSC);
-#endif
-
-	// Unlock the main OSC also but last
-	task->trigger->pDestinationOSC->getLock()->unlock();
-#ifdef CONFIG_PAGE_COLORING
-	pDataMovementLock.unlock();
-#endif
+	pActiveTaskLock.unlock();
 }
 
 void EventHandler::printCurrentEventTask() {

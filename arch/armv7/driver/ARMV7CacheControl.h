@@ -10,7 +10,6 @@
 
 #include <common/types.h>
 #include <common/ARM_common.h>
-#include <component/LockedOSC.h>
 #include <eventhandling/Trigger.h>
 #include <eventhandling/EventTask.h>
 

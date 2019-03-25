@@ -24,7 +24,7 @@ SECTION_CRITICAL_DATA EventHandling::Trigger GenericIO::trigger_printLine = {(OS
 
 SECTION_CRITICAL_DATA EventHandling::Event GenericIO::event_charReady;
 
-GenericIO::GenericIO(OSC *osc) : mUARTBufferDep(&OSC_PREFIX(ConsoleBuffer)::ConsoleBuffer::mInstance) {
+GenericIO::GenericIO(OSC *osc)  {
 	pInstance = this;
 	trigger_printLine.pDestinationOSC = this;
 }

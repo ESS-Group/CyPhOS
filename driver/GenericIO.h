@@ -10,7 +10,6 @@
 #define DRIVER_GENERICIO_H_
 
 #include <component/OSC.h>
-#include <component/OSCDependency.h>
 
 #include <eventhandling/Event.h>
 #include <eventhandling/Trigger.h>
@@ -32,8 +31,6 @@ public:
 	static EventHandling::Trigger trigger_printLine;
 
 	static EventHandling::Event event_charReady;
-private:
-	OSCDependency mUARTBufferDep;
 
 };
 

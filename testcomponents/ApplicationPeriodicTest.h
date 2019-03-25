@@ -11,7 +11,6 @@
 #include "ConsoleApplication.h"
 
 #include <component/OSC.h>
-#include <component/OSCDependency.h>
 
 #include <eventhandling/TimerEvent.h>
 

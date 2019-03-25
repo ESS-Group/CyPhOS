@@ -20,7 +20,6 @@ class CLASS_NAME : public InterruptOSC { \
 			void *getOSCStart(); \
 			void *getOSCTextEnd(); \
 			void *getOSCEnd(); \
-			Spinlock *getLock();
 
 #define BEGIN_DECLARE_INTERRUPTOSC_INHERIT(NAME,CLASS_NAME,INHERITANCE) \
 		extern void *__NS_OSC_##NAME##_OSC_start; \
@@ -32,7 +31,6 @@ class CLASS_NAME : public InterruptOSC, INHERITANCE { \
 			void *getOSCStart(); \
 			void *getOSCTextEnd(); \
 			void *getOSCEnd(); \
-			Spinlock *getLock();
 
 
 

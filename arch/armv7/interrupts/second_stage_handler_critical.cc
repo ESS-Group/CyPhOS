@@ -4,7 +4,6 @@
  *  Created on: 30.01.2017
  *      Author: hendrik
  */
-#include <component/LockedOSC.h>
 
 /* Debugging */
 #include <common/armhelper.h>

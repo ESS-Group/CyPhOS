@@ -10,8 +10,6 @@
 /* Include startup message */
 #include <common/greeting.h>
 
-/* ARM helper functions */
-#include <component/LockedOSC.h>
 
 /* Debug helpers */
 #define TAG "IMX6_INIT"
