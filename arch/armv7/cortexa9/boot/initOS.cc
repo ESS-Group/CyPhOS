@@ -136,8 +136,10 @@ inline void setHoldingPen(int32_t val) {
 
 	/* Set certain regions to cacheable */
 	DEBUG_STREAM(TAG,"Set OSC region to cacheable");
+#if !defined(CONFIG_ARMV7_CACHE_COLORING)
 	ARMMMU::pInstance.setRangeCacheable((uintptr_t) &__critical_osc_start, (uintptr_t) &__critical_osc_end, true);
 	ARMMMU::pInstance.setRangeCacheable((uintptr_t) &__oscs__start, (uintptr_t) &__oscs__end, true);
+#endif
 
 	ARMMMU::pInstance.setRangeCacheable((uintptr_t) &__pagestable_region_start, (uintptr_t) &__pagestable_region_end, false);
 	ARMMMU::pInstance.setRangeCacheable((uintptr_t) &__benchmark_results__start, (uintptr_t) &__benchmark_results__end, false);
