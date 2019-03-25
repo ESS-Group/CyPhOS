@@ -45,7 +45,7 @@ SECTION_CRITICAL_DATA OSC* GenericTimer::trigger_Interrupt_Deps[] = { nullptr };
 SECTION_CRITICAL_DATA EventHandling::Trigger GenericTimer::trigger_Interrupt((OSC*) &ExynosMultiCoreTimer::pInstance,
 		(void (OSC::*)(dword_t))&ExynosMultiCoreTimer::handleInterrupt, (OSC**)&trigger_Interrupt_Deps, EventHandling::Trigger::cMAX_Priority, 0x0);
 
-ExynosMultiCoreTimer::ExynosMultiCoreTimer()
+ExynosMultiCoreTimer::ExynosMultiCoreTimer() : GenericTimer(this)
 {
 	pLastEventCount = 0;
 	InterruptDispatcher::pInstance.registerEvent(HW_INT_G0_IRQ,&trigger_Interrupt);

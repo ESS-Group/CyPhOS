@@ -7,9 +7,6 @@
 
 #include <common/debug.h>
 
-/* ARM helper functions */
-#include <component/LockedOSC.h>
-
 /* Debug helpers */
 #define TAG "EXYNOS_INIT"
 
