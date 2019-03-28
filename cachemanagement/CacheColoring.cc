@@ -23,6 +23,9 @@ CacheColoring::CacheColoring() : GenericCacheManagement() {
 }
 
 void CacheColoring::prefetchDataToWay(uintptr_t start, uintptr_t end, uintptr_t textEnd, cacheways_t way, cycle_t* duration) {
+#ifdef CONFIG_SEQUENTIAL_COLORING
+	mSequentialLock.lock();
+#endif
 #ifdef CONFIG_PROFILING_PRELOAD
 	cycle_t before = 0, after = 0;
 	RESET_READ_CYCLE_COUNTER(before);
@@ -71,9 +74,15 @@ void CacheColoring::prefetchDataToWay(uintptr_t start, uintptr_t end, uintptr_t 
 	READ_CYCLE_COUNTER(after);
 	*duration = (after-before);
 #endif
+#ifdef CONFIG_SEQUENTIAL_COLORING
+	mSequentialLock.unlock();
+#endif
 }
 
 void CacheColoring::evictCacheWay(cacheways_t way, cycle_t* duration) {
+#ifdef CONFIG_SEQUENTIAL_COLORING
+	mSequentialLock.lock();
+#endif
 #ifdef CONFIG_PROFILING_WRITEBACK
 	cycle_t before = 0, after = 0;
 	RESET_READ_CYCLE_COUNTER(before);
@@ -102,6 +111,9 @@ void CacheColoring::evictCacheWay(cacheways_t way, cycle_t* duration) {
 #endif
 #ifdef CONFIG_CACHE_DEBUG
 	DEBUG_STREAM(TAG,"Finished evict");
+#endif
+#ifdef CONFIG_SEQUENTIAL_COLORING
+	mSequentialLock.unlock();
 #endif
 }
 

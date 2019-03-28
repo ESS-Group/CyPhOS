@@ -52,6 +52,7 @@
  * from multiple prefetching operations.
  */
 #define CONFIG_CACHE_CONTROL_LOCK_PRELOAD
+#define CONFIG_SEQUENTIAL_COLORING
 
 //#define CONFIG_CACHE_DEBUG
 //#define CONFIG_DISPATCHER_DEBUG
@@ -112,6 +113,7 @@
 //#define CONFIG_BAREMETAL_APPLICATION
 
 //#define CONFIG_DEBUG_SYSTEMMODE
+
 
 /**
  * Default priorities

@@ -9,6 +9,7 @@
 #define CACHEMANAGEMENT_CACHECOLORING_H_
 
 #include "GenericCacheManagement.h"
+#include <sync/Spinlock.h>
 
 namespace CacheManagement {
 
@@ -95,6 +96,10 @@ protected:
 	virtual void preloadSingleOSC(OSC *osc, cycle_t *duration);
 #endif
 private:
+
+#ifdef CONFIG_SEQUENTIAL_COLORING
+	Spinlock mSequentialLock;
+#endif
 };
 
 }
