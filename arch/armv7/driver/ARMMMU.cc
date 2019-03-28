@@ -184,10 +184,10 @@ void ARMMMU::setRangeCacheable(uintptr_t from, uintptr_t to, bool cacheable) {
 		pageEntry->c = cacheable;
 		pageEntry->b = cacheable;
 
-		flushTLBWithAddress(from);
-
 		from += cPAGE_SIZE;
 	}
+
+	flushTLB();
 }
 
 void ARMMMU::enableMaintenanceBroadcasting(){

@@ -157,8 +157,6 @@ inline void setHoldingPen(int32_t val) {
 	DEBUG_STREAM(TAG,"Initialized the pagetable");
 	ARMMMU::pInstance.activateMMU();
 
-	//ARMMMU::pInstance.flushTLB();
-
 	/* Enable cycle counter */
 	ARMV7PerformanceCounter::pInstance.enableGlobal();
 	ARMV7PerformanceCounter::pInstance.enableCycleCount();
@@ -182,6 +180,7 @@ inline void setHoldingPen(int32_t val) {
 	DEBUG_STREAM(TAG, "Cache enabled");
 	CacheManagement::ARMV7CacheControl::pInstance.printCacheInformation();
 
+	ARMMMU::pInstance.flushTLB();
 
 	/* Finalize MemoryAllocator initialization */
 //	DynamicMemory::MemoryAllocator::mInstance.init_last();
@@ -317,6 +316,7 @@ inline void setHoldingPen(int32_t val) {
 
 	DEBUG_STREAM(TAG,"SCTLR: " << hex << getSCTLR() << " ACTLR: " << getACTLR());
 
+	ARMMMU::pInstance.flushTLB();
 	/* Release the holding pen, so another core can boot up */
 	DEBUG_STREAM(TAG,"Core is running...");
 
