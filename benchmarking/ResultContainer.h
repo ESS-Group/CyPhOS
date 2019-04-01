@@ -15,23 +15,12 @@
 #include <eventhandling/EventHandler.h>
 #include "ResultPrintApplication.h"
 
-enum ResultType{
-	OSC_PRELOAD,
-	OSC_WRITEBACK,
-	TRIGGER_EXECUTION_TIME,
-	INTERRUPT_DISPATCH,
-	INTERRUPT_START_TIMER,
-	CONTEXT_SWITCH,
-	INPUT_LATENCY,
-	UART_END_TIMER,
-	TIMER_END_TIMER,
-	BENCHMARK_HORSING_AROUND,
-	BENCHMARK_EXECUTION,
+enum ResultType {
+	OSC_PRELOAD, OSC_WRITEBACK, TRIGGER_EXECUTION_TIME, INTERRUPT_DISPATCH, INTERRUPT_START_TIMER, CONTEXT_SWITCH, INPUT_LATENCY, UART_END_TIMER, TIMER_END_TIMER, BENCHMARK_HORSING_AROUND, BENCHMARK_EXECUTION,
 };
 
 enum CounterType {
-	CYCLE_COUNTER,
-	SYSTEM_TIMER,
+	CYCLE_COUNTER, SYSTEM_TIMER,
 };
 
 struct BenchmarkResult {
@@ -44,15 +33,14 @@ struct BenchmarkResult {
 
 class ResultContainer {
 private:
-	static constexpr uint32_t cResultStorageSize = 3000;
+	static constexpr uint32_t cResultStorageSize = 20000;
 	const char *convertTypeToString(ResultType type);
-
 
 	BenchmarkResult pStorage[cResultStorageSize];
 
 	uint32_t pCurrentPointer = 1;
 
-	 static bool full;
+	static bool full;
 
 public:
 	ResultContainer();
@@ -62,13 +50,13 @@ public:
 	 * This should be inlined, to prevent cache misses
 	 */
 	inline void enterResult(ResultType type, CounterType counterType, cycle_t value, uint32_t id, uint32_t sequence) {
-		if(pCurrentPointer == cResultStorageSize || full) {
-			if(!full){
+		if (pCurrentPointer == cResultStorageSize || full) {
+			if (!full) {
 				full = true;
-				EventHandling::EventHandler::pInstance.callOSCTrigger(&OSC_PREFIX(ResultPrintApplication)::ResultPrintApplication::trigger_PrintResultContainer,0x0);
+				EventHandling::EventHandler::pInstance.callOSCTrigger(&OSC_PREFIX(ResultPrintApplication)::ResultPrintApplication::trigger_PrintResultContainer, 0x0);
 			}
 			return;
-		} else if(pCurrentPointer != 0 && (pCurrentPointer % 1000) == 0) {
+		} else if (pCurrentPointer != 0 && (pCurrentPointer % 5000) == 0) {
 			DEBUG_STREAM("RESULTCONTAINER", "Results: " << dec << pCurrentPointer);
 		}
 		pStorage[pCurrentPointer].duration = value;
@@ -81,8 +69,6 @@ public:
 	void printOutResults(cpu_t cpu);
 
 	static ResultContainer pInstance[NR_CPUS];
-
-
 
 };
 
