@@ -23,11 +23,12 @@ typedef uint32_t cacheways_t;
 class GenericCacheManagement {
 protected:
 	struct CACHE_WAY_STATE_t {
-			bool permanentLocked;
-			uint8_t lruCount;
-			uintptr_t dataStart;
-			uintptr_t dataEnd;
-			bool inUse;
+			__attribute__ ((aligned (4)))bool permanentLocked;
+			__attribute__ ((aligned (4)))uint8_t lruCount;
+			__attribute__ ((aligned (4)))uintptr_t dataStart;
+			__attribute__ ((aligned (4)))uintptr_t dataEnd;
+			__attribute__ ((aligned (4)))uintptr_t osc;
+			__attribute__ ((aligned (4)))bool inUse;
 		};
 
 public:
@@ -84,7 +85,7 @@ protected:
 	/**
 	 * Array of status variables for all the available cache ways of a system
 	 */
-	CACHE_WAY_STATE_t mCacheWays[cMaxCacheWays];
+	volatile CACHE_WAY_STATE_t mCacheWays[cMaxCacheWays];
 
 	/**
 	 * Spinlock used to ensure only one processor at a time utilizes/changes the cache state

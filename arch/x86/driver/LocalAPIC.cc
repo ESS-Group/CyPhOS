@@ -43,6 +43,7 @@ LocalAPIC::LocalAPIC() : mBaseAddress(0), mTimeBase(0) {
 
 void LocalAPIC::printDebug() {
 	// Determine APIC base address
+#ifdef CONFIG_DEBUG
 	uint64_t baseReg = readMSR(cMSR_APIC_BASE_ADDRESS_REGISTER);
 	APIC_BASE_REGISTER_t *regStruct = (APIC_BASE_REGISTER_t*)&baseReg;
 	DEBUG_STREAM(TAG, "Base Address Register = BSP: " << (uint16_t)regStruct->bsc << " AE: " << (uint16_t)regStruct->ae);
@@ -56,6 +57,7 @@ void LocalAPIC::printDebug() {
 	DEBUG_STREAM(TAG, "APIC Version raw: " << hex << versionRegVal);
 	APIC_VERSION_REGISTER_t *versionReg = (APIC_VERSION_REGISTER_t*)&versionRegVal;
 	DEBUG_STREAM(TAG, "APIC version: " << dec << versionReg->version << ", max LVT: " << versionReg->mle << ", ext. APIC: " << (uint16_t)versionReg->eas);
+#endif
 }
 
 void LocalAPIC::printRegisters() {
@@ -227,11 +229,15 @@ void LocalAPIC::calibrate() {
 	//uint32_t used_ticks = Math::div64(((unsigned long long) ticks) * 1000 * 1000, 838 * 65535);
 	DEBUG_STREAM(TAG,"LAPIC ticks in " << dec << (65535*838)<<"ns : " << ticks);
 
+
 	uint64_t tempVal = ((uint64_t)838 * (uint64_t)65535 * (uint64_t)1000)/(uint64_t)(ticks);
 	DEBUG_STREAM(TAG,"ps per tick: " << dec << tempVal);
 
+
+#ifdef CONFIG_DEBUG
 	uint64_t frequency = (1*1000000000000)/tempVal;
 	DEBUG_STREAM(TAG,"Timer frequency in kHz: " << dec << frequency / 1000);
+#endif
 	mTimeBase = tempVal;
 
 	DEBUG_STREAM(TAG,"LocalAPIC timer calibrated to timebase: " << dec << mTimeBase);
