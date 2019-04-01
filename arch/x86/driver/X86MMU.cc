@@ -29,7 +29,8 @@ X86MMU X86MMU::mInstance;
 #define FLUSH_TLB 	__asm__ __volatile__ ( \
 	"MFENCE\n" \
 	"mov %%cr3, %%rax\n"  \
-	"mov %%rax, %%cr3\n":::"memory","rax")
+	"mov %%rax, %%cr3\n" \
+	"MFENCE\n":::"memory","rax")
 
 X86MMU::X86MMU() : GenericMMU() {
 }
@@ -131,6 +132,7 @@ uintptr_t X86MMU::getPhysicalAddressForVirtual(uintptr_t virtualPage) {
 }
 
 void X86MMU::mapVirtualPageToPhysicalAddress(uintptr_t virtualPage, uintptr_t physicalPage, bool cacheable) {
+	__asm__ __volatile__ ("MFENCE\n":::"memory");
 	volatile X86Pagetable::pteEntry_t *pte = getPTEEntryFromAddress(virtualPage);
 
 //	FLUSH_TLB_ADDRESS(virtualPage);
@@ -142,7 +144,7 @@ void X86MMU::mapVirtualPageToPhysicalAddress(uintptr_t virtualPage, uintptr_t ph
 	pte->pwt = !cacheable;
 	pte->pcd = !cacheable;
 
-	flushTLB();
+	FLUSH_TLB;
 }
 
 uintptr_t X86MMU::getDummyPageAddress() {
