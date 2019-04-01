@@ -10,6 +10,15 @@
 
 #include <common/types.h>
 
+#include <common/cyclecounter.h>
+
+#ifndef TAG
+#define RED_TAG
+#define TAG "Spinlock"
+#endif
+
+//#define CONFIG_SPINLOCK_DEADLOCK_DETECTION
+
 class Spinlock {
 private:
 	volatile uint32_t __attribute__ ((aligned (4))) available;
@@ -20,8 +29,18 @@ public:
 	}
 
 	void lock() {
+#ifdef CONFIG_SPINLOCK_DEADLOCK_DETECTION
+		cycle_t before,after;
+		READ_CYCLE_COUNTER(before);
+#endif
 		uint32_t myTicket = __atomic_fetch_add(&available, 1, __ATOMIC_ACQUIRE);
 		while (__atomic_load_n(&active, __ATOMIC_ACQUIRE) != myTicket) {
+#ifdef CONFIG_SPINLOCK_DEADLOCK_DETECTION
+			READ_CYCLE_COUNTER(after);
+			if(after-before > 100000000) {
+				DEBUG_STREAM(TAG,"Deadlock?");
+			}
+#endif
 		}
 	}
 
@@ -42,5 +61,10 @@ public:
 	}
 
 };
+
+#ifdef RED_TAG
+#undef TAG
+#undef RED_TAG
+#endif
 
 #endif /* SYNC_SPINLOCK_H_ */
