@@ -28,6 +28,7 @@ void GenericMMU::moveVirtualPageToPhysicalAddress(uintptr_t virtualPage, uintptr
 
 	// Get physical address that is mapped to the current virtual address
 	uintptr_t originalPhysicalAddress = getPhysicalAddressForVirtual(virtualPage);
+	// Change the cacheable attribute
 	mapVirtualPageToPhysicalAddress(virtualPage, originalPhysicalAddress, !cacheable);
 
 	// If physical page is not mapped to virtual address map a dummy page to it and use this one
