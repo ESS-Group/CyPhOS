@@ -136,6 +136,8 @@ private:
 
 	void lookupAndEvictOSC(OSC *osc, cycle_t *duration);
 
+	uintptr_t mLastEviction[NR_CPUS];
+
 };
 
 } /* namespace CacheManagement */
