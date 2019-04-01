@@ -73,6 +73,19 @@ namespace EventHandling {
 
 class EventHandler {
 public:
+	enum STATE {
+		PRELOADING,
+		PRELOADED,
+		WRITEBACK,
+		EXECUTING_TRIGGER,
+		WAITING,
+		DISPATCHING,
+		SETTING_UP_OSC_JUMP,
+		FINALIZING_JUMP,
+		RETURNED_TO_HANDLER,
+		WRITEBACK_COMPLETE,
+		UNLOCKED_TASK
+	};
 	EventHandler();
 
 	/**
@@ -201,7 +214,7 @@ public:
 	 * Singleton instance
 	 */
 	static EventHandler pInstance;
-
+	STATE pCPUState[NR_CPUS];
 private:
 	/* Size of the static event pool */
 	static constexpr uint32_t cEventTaskPoolSize = 128;
@@ -293,6 +306,8 @@ private:
 	 * release in dispatching().
 	 */
 	uintptr_t pStackPointers[NR_CPUS];
+
+
 };
 
 }

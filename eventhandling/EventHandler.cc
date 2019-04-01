@@ -111,6 +111,8 @@ void printMemory(void *addr, uint32_t range) {
 }
 
 void contextSwitchOSC(EventHandling::EventTask *con, dword_t arg) {
+	cpu_t cpuID = getCPUID();
+	EventHandling::EventHandler::pInstance.pCPUState[cpuID] = EventHandling::EventHandler::FINALIZING_JUMP;
 	void (OSC::*func)(dword_t) = con->trigger->pDestinationFunc;
 
 #ifdef CONFIG_DISPATCHER_DEBUG
@@ -120,8 +122,6 @@ void contextSwitchOSC(EventHandling::EventTask *con, dword_t arg) {
 
 #ifdef CONFIG_PROFILING_EXECUTION
 	if (profiling_trigger_included(con->trigger)) {
-		/* Get the CPUID */
-		cpu_t cpuID = getCPUID();
 
 #ifdef CONFIG_X86_DISCARD_SMI_PROFILING
 		// Save SMI count to compare later
@@ -130,6 +130,8 @@ void contextSwitchOSC(EventHandling::EventTask *con, dword_t arg) {
 		RESET_READ_CYCLE_COUNTER(sTimerStartValue[cpuID]);
 	}
 #endif
+	EventHandling::EventHandler::pInstance.pCPUState[cpuID] = EventHandling::EventHandler::EXECUTING_TRIGGER;
+
 	(con->trigger->pDestinationOSC->*func)(arg);
 }
 
@@ -214,6 +216,7 @@ void EventHandler::eventTaskFinished(void *stackPointer) {
 	READ_CYCLE_COUNTER(after);
 #endif
 	byte_t cpuID = getCPUID();
+	pCPUState[cpuID] = RETURNED_TO_HANDLER;
 
 	EventTask *eventtask = pActiveEventTask[cpuID];
 #ifdef CONFIG_DISPATCHER_DEBUG
@@ -256,9 +259,10 @@ void EventHandler::eventTaskFinished(void *stackPointer) {
 #endif
 	cycle_t cycles_evict = 0;
 
+	pCPUState[cpuID] = WRITEBACK;
 	// Call the cache management to evict the component from the cache
 	CacheManagement::GenericCacheManagement::sInstance->evictOSC(eventtask, &cycles_evict);
-
+	pCPUState[cpuID] = WRITEBACK_COMPLETE;
 #ifdef CONFIG_PROFILING_WRITEBACK
 	if (profileTrigger) {
 #ifdef CONFIG_X86_DISCARD_SMI_PROFILING
@@ -276,14 +280,16 @@ void EventHandler::eventTaskFinished(void *stackPointer) {
 
 #endif
 
-#ifdef CONFIG_LOCK_OSC
-	unlockTask(eventtask);
-#endif
-
-
 #ifdef CONFIG_PROFILING
 	eventtask->trigger->mSequenceNo++;
 #endif
+
+	/*
+	 * Unlock the component and all its dependencies
+	 */
+	unlockTask(eventtask);
+
+	pCPUState[cpuID] = UNLOCKED_TASK;
 
 	/*
 	 * Clean up the event and requeue it as a free event if it was a SW event
@@ -339,10 +345,10 @@ void EventHandler::eventTaskFinished(void *stackPointer) {
 
 #endif
 
-
+	pCPUState[cpuID] = PRELOADING;
 	// Call the cache management to preload the OSC to the cache
 	CacheManagement::GenericCacheManagement::sInstance->preloadOSC(destOSC,event->trigger,&cycles_preload);
-
+	pCPUState[cpuID] = PRELOADED;
 #ifdef CONFIG_PROFILING_PRELOAD_OVERHEAD
 	READ_CYCLE_COUNTER(cycles_preload);
 	cycles_preload -= cycles_preload_before;
@@ -377,6 +383,7 @@ void EventHandler::eventTaskFinished(void *stackPointer) {
 	pEventDispatchCounter++;
 	// Increase local dispatched event counter
 	pCoreDispatchCount[cpuID]++;
+	pCPUState[cpuID] = SETTING_UP_OSC_JUMP;
 	// CAUTION: This will not return
 	dispatchOSCMemberEvent_asm((void*)pStackPointers[cpuID], event, event->mArg);
 }
@@ -415,6 +422,7 @@ void EventHandler::dispatching() {
 	 * If no events are available, it will sleep until woken again.
 	 */
 	while (1) {
+		pCPUState[cpuNR] = WAITING;
 		// Stop event dispatching if a exception occurred on some CPU
 		if(exceptionActive) {
 			// Hang here, the system will most likely not work correctly after an exception on one CPU anyway.
@@ -424,14 +432,16 @@ void EventHandler::dispatching() {
 		// CAUTION: This needs to be synchronized in some way because the interrupt "handler" also enqueues events.
 		Core::SystemMode::mInstance.disableInterrupts();
 
-
-
 		task = pScheduling->getEvent(cpuNR);
 
-
+		if (task != pActiveEventTask[cpuNR]) {
+			DEBUG_STREAM(TAG,"Trying to activate non locked task");
+			while(1){}
+		}
 
 		// Check if an event is available to be dispatched
 		if (nullptr != task) {
+			pCPUState[cpuNR] = DISPATCHING;
 #ifdef CONFIG_MEASURE_IDLE
 			uint64_t idleStop = OSC_PREFIX(Timer)::GenericTimer::pInstance->getHardwareTicks();
 			pIdleTime[cpuNR] += (idleStop - idleStart);
@@ -663,6 +673,7 @@ bool EventHandler::tryTaskLock(EventTask *task) {
 	}
 
 	pActiveTaskLock.lock();
+//	DEBUG_STREAM(TAG,"Try locking EventTask: " << hex << task << " with OSC: " << task->trigger->pDestinationOSC);
 
 	// Check for task's OSC and all its dependencies if the component is already in use
 	for (cpu_t cpu = 0; cpu < NR_CPUS; cpu++) {
@@ -713,6 +724,7 @@ bool EventHandler::tryTaskLock(EventTask *task) {
 	DEBUG_STREAM(TAG,"Locked task: " << hex << task << " with OSC: " << task->trigger->pDestinationOSC);
 #endif
 
+//	DEBUG_STREAM(TAG,"Success");
 	pActiveTaskLock.unlock();
 	return true;
 }
@@ -720,26 +732,36 @@ bool EventHandler::tryTaskLock(EventTask *task) {
 void EventHandler::unlockTask(EventTask *task) {
 	pActiveTaskLock.lock();
 
-	pActiveEventTask[getCPUID()] = nullptr;
+	cpu_t cpuID = getCPUID();
+	EventTask *activeTask = pActiveEventTask[cpuID];
+	if (activeTask != task) {
+		DEBUG_STREAM(TAG,"Trying to unlock a foreign task!!!, Something is wrong, captain!");
+	}
+
+	pActiveEventTask[cpuID] = nullptr;
 #ifdef CONFIG_DISPATCHER_DEBUG
-	DEBUG_STREAM(TAG,"Unlocked task: " << hex << task << " with OSC: " << task->trigger->pDestinationOSC);
 #endif
+//	DEBUG_STREAM(TAG,"Unlocked task: " << hex << task << " with OSC: " << task->trigger->pDestinationOSC);
 
 	pActiveTaskLock.unlock();
 }
 
 void EventHandler::printCurrentEventTask() {
-	cpu_t cpu = getCPUID();
-	EventTask *task = pActiveEventTask[cpu];
-	if(task == nullptr) {
-		DEBUG_STREAM(TAG,"No task running");
-		return;
+	DEBUG_STREAM(TAG,"Running on: " << dec << (uint32_t)getCPUID());
+	for (cpu_t cpu = 0; cpu < NR_CPUS; cpu++) {
+		EventTask *task = pActiveEventTask[cpu];
+		DEBUG_STREAM(TAG,"CPU: " << dec << (uint32_t)cpu);
+		DEBUG_STREAM(TAG,"State:" << dec << pCPUState[cpu]);
+		DEBUG_STREAM(TAG,"EventTask: " << hex << task);
+		if (task == nullptr) {
+			continue;
+		}
+		DEBUG_STREAM(TAG,"EventTask stack: " << task->pStackpointer);
+		DEBUG_STREAM(TAG,"EventTask trigger: " << task->trigger);
+		DEBUG_STREAM(TAG,"EventTask trigger OSC: " << task->trigger->pDestinationOSC);
+		DEBUG_STREAM(TAG,"EventTask event: " << task->event);
 	}
-	DEBUG_STREAM(TAG,"EventTask: " << hex << task);
-	DEBUG_STREAM(TAG,"EventTask stack: " << task->pStackpointer);
-	DEBUG_STREAM(TAG,"EventTask trigger: " << task->trigger);
-	DEBUG_STREAM(TAG,"EventTask trigger OSC: " << task->trigger->pDestinationOSC);
-	DEBUG_STREAM(TAG,"EventTask event: " << task->event);
+	CacheManagement::GenericCacheManagement::sInstance->printCacheWayInformation();
 }
 
 #ifdef CONFIG_X86_DISCARD_SMI_PROFILING
