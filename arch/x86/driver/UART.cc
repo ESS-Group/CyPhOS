@@ -17,7 +17,7 @@
 
 #define TAG "UART"
 
-BEGIN_OSC_IMPLEMENTATION_SECONDARY(InputOutput,UART)
+BEGIN_OSC_IMPLEMENTATION(UART,UART)
 
 // Static instances for "com1-com4"
 UART UART::mInstances[4] = { UART(cBaseCOM1), UART(cBaseCOM2), UART(cBaseCOM3),
@@ -27,7 +27,7 @@ UART UART::mInstances[4] = { UART(cBaseCOM1), UART(cBaseCOM2), UART(cBaseCOM3),
 /**
  * Static trigger dependencies
  */
-SECTION_CRITICAL_DATA OSC* UART::trigger_Interrupt_Deps[] = { nullptr };
+SECTION_CRITICAL_DATA OSC* UART::trigger_Interrupt_Deps[] = {&OSC_PREFIX(InputOutput)::InputOutputAggregator::pInstance, nullptr };
 
 /**
  * Static triggers
@@ -53,7 +53,7 @@ DEFINE_TRIGGER_FUNC(UART, handleInterrupt) {
 	if (!((IIR_t*)&regVal)->interruptPending) {
 		// Read line status register
 		regVal = mLineStatusPort.readByte();
-		InputOutputAggregator::pInstance.handleInputInterrupt(readC());
+		OSC_PREFIX(InputOutput)::InputOutputAggregator::pInstance.handleInputInterrupt(readC());
 	}
 }
 

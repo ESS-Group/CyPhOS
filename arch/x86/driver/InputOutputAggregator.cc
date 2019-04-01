@@ -22,7 +22,7 @@ InputOutputAggregator::InputOutputAggregator() : GenericIO(this) {
 }
 
 void InputOutputAggregator::putc(char c) {
-	OSC_PREFIX(InputOutput)::UART::mInstances[0].putc(c);
+	OSC_PREFIX(UART)::UART::mInstances[0].putc(c);
 	CGAScreen::mInstance.mInstance.print(&c,1,15);
 }
 

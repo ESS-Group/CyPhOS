@@ -15,7 +15,7 @@
 #include <common/types.h>
 #include <common/IOPort.h>
 
-BEGIN_DECLARE_OSC(InputOutput, LegacyKeyboard)
+BEGIN_DECLARE_OSC(Keyboard, LegacyKeyboard)
 
 public:
 	enum KEYBOARD_LED_t {

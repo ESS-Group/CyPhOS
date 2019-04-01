@@ -7,7 +7,7 @@
 
 #include <arch/x86/driver/CGAScreen.h>
 
-//MEMBER_OF_OSC_BEGIN(InputOutput)
+MEMBER_OF_OSC_BEGIN(InputOutput)
 
 // Singleton instance
 CGAScreen CGAScreen::mInstance;
@@ -130,5 +130,5 @@ unsigned char attribute(CGAScreen::CGAColor_t bg, CGAScreen::CGAColor_t fg, bool
 	return (blink ? 0x80 : 0) | ((bg & 0x7) << 4) | (fg & 0xf);
 }
 
-//MEMBER_OF_OSC_END
+MEMBER_OF_OSC_END
 

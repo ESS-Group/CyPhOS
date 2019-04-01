@@ -14,7 +14,7 @@
 
 #include <common/IOPort.h>
 
-BEGIN_DECLARE_OSC(InputOutput,UART)
+BEGIN_DECLARE_OSC(UART,UART)
 
 public:
 	struct IER_t // Interrupt Enable Register

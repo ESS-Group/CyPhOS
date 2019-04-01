@@ -204,10 +204,10 @@ void printMemory(uintptr_t start, uint64_t length) {
 #endif
 
 	// Enable keyboard interrupts
-	OSC_PREFIX(InputOutput)::LegacyKeyboard::mInstance.setInterruptEnabled(true);
+	OSC_PREFIX(Keyboard)::LegacyKeyboard::mInstance.setInterruptEnabled(true);
 
 	// Reset & enable UART interrupts
-	OSC_PREFIX(InputOutput)::UART::mInstances[0].resetController();
+	OSC_PREFIX(UART)::UART::mInstances[0].resetController();
 
 	// Start initial UARTConsole
 	OSC_PREFIX(UARTConsole)::UARTConsole::pInstance.start();

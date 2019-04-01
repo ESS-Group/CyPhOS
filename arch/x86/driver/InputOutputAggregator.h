@@ -9,20 +9,20 @@
 #define ARCH_X86_DRIVER_INPUTOUTPUTAGGREGATOR_H_
 
 #include <driver/GenericIO.h>
+#include <component/OSC.h>
 
 MEMBER_OF_OSC_BEGIN(InputOutput)
 
 
 class InputOutputAggregator : public GenericIO {
-	friend class UART;
 	friend class LegacyKeyboard;
 public:
 	InputOutputAggregator();
 
 	void putc(char c);
 	void handleInputInterrupt(dword_t arg);
-private:
 	static InputOutputAggregator pInstance;
+private:
 };
 
 MEMBER_OF_OSC_END

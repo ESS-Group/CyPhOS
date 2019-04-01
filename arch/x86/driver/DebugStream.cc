@@ -9,15 +9,16 @@
 
 #include <driver/UART.h>
 
+#include <driver/CGAScreen.h>
 DebugStream DebugStream::mInstance;
 
 
 void DebugStream::writeToDevice() {
 	//write to Screen
-	print(mCharBuffer,mBufferPosition,15);
+	OSC_PREFIX(InputOutput)::CGAScreen::mInstance.print(mCharBuffer,mBufferPosition,15);
 	//write to COM1
 	// FIXME
-	OSC_PREFIX(InputOutput)::UART::mInstances[0].print(mCharBuffer,mBufferPosition);
+	OSC_PREFIX(UART)::UART::mInstances[0].print(mCharBuffer,mBufferPosition);
 }
 
 DebugStream* DebugStream::startLine() {

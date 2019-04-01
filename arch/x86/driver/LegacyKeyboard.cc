@@ -20,7 +20,7 @@
 
 #define TAG "Keyboard"
 
-BEGIN_OSC_IMPLEMENTATION_SECONDARY(InputOutput, LegacyKeyboard)
+BEGIN_OSC_IMPLEMENTATION(Keyboard, LegacyKeyboard)
 
 unsigned const char LegacyKeyboard::cTabNormal[] =
 {
@@ -66,7 +66,7 @@ LegacyKeyboard LegacyKeyboard::mInstance;
 /**
  * Static trigger dependencies
  */
-SECTION_CRITICAL_DATA OSC* LegacyKeyboard::trigger_Interrupt_Deps[] = { nullptr };
+SECTION_CRITICAL_DATA OSC* LegacyKeyboard::trigger_Interrupt_Deps[] = {&OSC_PREFIX(InputOutput)::InputOutputAggregator::pInstance, nullptr };
 
 /**
  * Static triggers
@@ -256,6 +256,11 @@ void LegacyKeyboard::setRepeatRate(uint8_t speed, uint8_t delay) {
 }
 
 void LegacyKeyboard::setInterruptEnabled(bool enabled) {
+	OSC **dep = trigger_Interrupt_Deps;
+	while (*dep != nullptr) {
+		DEBUG_STREAM(TAG,"Interrupt dep: " << hex << *dep);
+		dep++;
+	}
 	if (enabled) {
 		IOAPIC::mInstances[0].setInterruptMask(IOAPIC::INTERRUPT_INPUT_KEYBOARD, IOAPIC::UNMASKED);
 		for (uint16_t i = 0; i <1000;i++) {

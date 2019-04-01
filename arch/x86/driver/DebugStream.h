@@ -8,11 +8,11 @@
 #ifndef ARCH_X86_DRIVER_DEBUGSTREAM_H_
 #define ARCH_X86_DRIVER_DEBUGSTREAM_H_
 
-#include <driver/CGAScreen.h>
+
 #include <common/OutputStream.h>
 
 
-class DebugStream : public OutputStream, public CGAScreen {
+class DebugStream : public OutputStream {
 
 protected:
 	void writeToDevice();

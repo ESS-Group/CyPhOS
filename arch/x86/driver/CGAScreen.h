@@ -12,9 +12,9 @@
 
 #include <common/IOPort.h>
 
-//#include <component/OSC.h>
+#include <component/OSC.h>
 
-//MEMBER_OF_OSC_BEGIN(InputOutput)
+MEMBER_OF_OSC_BEGIN(InputOutput)
 
 class CGAScreen {
 public:
@@ -60,6 +60,6 @@ private:
 	IOPort mDataPort;
 };
 
-//MEMBER_OF_OSC_END
+MEMBER_OF_OSC_END
 
 #endif /* ARCH_X86_DRIVER_CGASCREEN_H_ */
